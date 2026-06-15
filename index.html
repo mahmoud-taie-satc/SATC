@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SATC — Supplier Supply Tracking (Live)</title>
+<style>
+:root{--bg:#0a0e1a;--panel:#111827;--panel2:#0f1626;--border:rgba(255,255,255,.06);--text:#e8edf6;--muted:#8b97ad;
+--blue:#3b82f6;--green:#22c55e;--purple:#8b5cf6;--orange:#f59e0b;--cyan:#06b6d4;--rose:#f43f5e;--gold:#caa45a;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(1200px 600px at 70% -10%,#16203a 0%,var(--bg) 55%);color:var(--text);font-family:"Segoe UI",system-ui,sans-serif;min-height:100vh}
+.app{display:flex;min-height:100vh}
+.side{width:200px;flex:0 0 200px;background:linear-gradient(180deg,#0d1424,#0a0f1c);border-right:1px solid var(--border);padding:22px 14px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh}
+.logo{display:flex;align-items:center;justify-content:center;margin-bottom:26px}
+.nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:var(--muted);text-decoration:none;font-size:13.5px;font-weight:500;cursor:pointer}
+.nav a:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.nav a.active{background:linear-gradient(90deg,rgba(59,130,246,.22),rgba(99,102,241,.06));color:#fff;box-shadow:inset 0 0 0 1px rgba(99,130,246,.25)}
+.side .grow{flex:1}
+.profile{text-align:center;padding-top:18px;border-top:1px solid var(--border)}
+.profile .rl{color:var(--muted);font-size:11px;margin-top:8px}
+.satc{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;background:var(--gold);border-radius:11px;padding:7px 16px;line-height:1.05}
+.satc b{font-weight:800;letter-spacing:3px;color:#1c2c4e;font-size:21px}
+.satc i{font-style:normal;font-weight:700;color:#1c2c4e;font-size:11px;margin-top:3px}
+.satc.sm{padding:6px 13px}.satc.sm b{font-size:16px;letter-spacing:2px}.satc.sm i{font-size:9px}
+.main{flex:1;padding:22px 26px 10px}
+.head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.head h1{font-size:25px;font-weight:700}
+.head .sub{color:var(--muted);font-size:13.5px;margin-top:3px}
+.head .tools{display:flex;align-items:center;gap:10px}
+.pill{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:9px 13px;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.pill .d{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.pill.live .d{background:var(--green);box-shadow:0 0 8px var(--green)}
+.pill.off .d{background:var(--orange)}
+.btn{border-radius:10px;padding:9px 14px;font-size:12.5px;border:1px solid var(--border);cursor:pointer;display:inline-flex;align-items:center;gap:7px;background:var(--panel);color:var(--text);text-decoration:none}
+.btn.primary{background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;border:none;box-shadow:0 6px 18px rgba(59,130,246,.35)}
+.btn.gold{background:linear-gradient(135deg,#caa45a,#b08d44);color:#1c2c4e;border:none;font-weight:700}
+.grid{display:grid;gap:16px}
+.kpis{grid-template-columns:repeat(5,1fr);margin-bottom:16px}
+.card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.kpi .top{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px}
+.kpi .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:#fff}
+.kpi .val{font-size:26px;font-weight:700;margin:9px 0 6px}
+.kpi .val small{font-size:14px;color:var(--muted);font-weight:600;margin-right:3px}
+.kpi .chg{font-size:12px;display:flex;align-items:center;gap:6px}
+.kpi .chg .up{color:var(--green);font-weight:700}.kpi .chg .vs{color:var(--muted)}
+.kpi .spark{margin-top:10px}
+.row2{grid-template-columns:1.55fr 1fr;margin-bottom:16px}
+.row3{grid-template-columns:1fr 1fr 1fr}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ph h3{font-size:16px;font-weight:650}
+.ph .sel{background:var(--panel2);border:1px solid var(--border);border-radius:9px;padding:6px 11px;font-size:12px;color:var(--muted)}
+.bignum{font-size:25px;font-weight:700;margin:2px 0}
+.bignum .up{font-size:13px;color:var(--green);font-weight:700;margin-left:6px}
+.bignum .vs{font-size:12px;color:var(--muted);font-weight:500;margin-left:4px}
+.donutwrap{display:flex;align-items:center;gap:14px;margin-top:6px}
+.legend{flex:1;display:flex;flex-direction:column;gap:11px}
+.lg{display:flex;align-items:center;gap:9px;font-size:13px}
+.lg .sw{width:9px;height:9px;border-radius:50%}.lg .vv{margin-left:auto;font-weight:600}.lg .pp{color:var(--muted);width:46px;text-align:right}
+.tprow{display:grid;grid-template-columns:18px 30px 1fr auto;align-items:center;gap:11px;padding:9px 0}
+.tprow .rk{color:var(--muted);font-size:13px}
+.tprow .av{width:30px;height:30px;border-radius:9px;background:#1b2436;display:grid;place-items:center;font-size:14px}
+.tprow .nm{font-size:13.5px;font-weight:600}
+.tprow .bar{height:5px;border-radius:4px;background:#1b2436;overflow:hidden;margin-top:6px}
+.tprow .bar>i{display:block;height:100%;border-radius:4px}
+.tprow .rv{font-size:13px;font-weight:700}
+.muted{color:var(--muted)}
+.catrow{padding:11px 0;border-bottom:1px solid var(--border)}.catrow:last-child{border:0}
+.catrow .t{display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:7px}
+.catrow .pbar{height:8px;border-radius:6px;background:#1b2436;overflow:hidden}
+.catrow .pbar>i{display:block;height:100%;border-radius:6px}
+.catrow .meta{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:6px}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{text-align:right;color:var(--muted);font-weight:600;padding:11px 12px;border-bottom:1px solid var(--border);font-size:12px;white-space:nowrap}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl td{padding:12px;border-bottom:1px solid var(--border);text-align:right}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tr.total td{font-weight:700;background:rgba(99,130,246,.08)}
+.tbl .pb{height:6px;border-radius:4px;background:#1b2436;overflow:hidden;margin-top:6px;min-width:90px}
+.tbl .pb>i{display:block;height:100%;border-radius:4px}
+.sig{text-align:center;padding:24px 0 16px;margin-top:8px}
+.sig .ln{display:inline-block;width:120px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);vertical-align:middle;margin:0 18px}
+.sig .satc{background:none;padding:0;border-radius:0}
+.sig .satc b{color:var(--gold);font-size:25px;letter-spacing:5px}
+.sig .satc i{color:var(--gold);opacity:.8;font-size:12px;margin-top:5px;letter-spacing:4px}
+.sidebar-sig{padding:6px 0 2px}
+.sidebar-sig .ln{width:22px;margin:0 8px}
+.sidebar-sig .satc b{font-size:20px;letter-spacing:3px}
+.sidebar-sig .satc i{font-size:10px;margin-top:3px}
+.setup{margin:0 0 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:12px 16px;font-size:12.5px;color:#f7c873}
+.setup code{background:#0a1120;padding:1px 6px;border-radius:5px;color:#cfe0ff}
+.view{display:none}.view.active{display:block}
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(2,1fr)}.row2,.row3{grid-template-columns:1fr}.side{display:none}}
+</style></head>
+<body>
+<div class="app">
+  <aside class="side">
+    <nav class="nav" id="nav"></nav>
+    <div class="grow"></div>
+  </aside>
+  <main class="main">
+    <div class="head">
+      <div><h1 id="pageTitle">Dashboard Overview</h1><div class="sub">SATC — Supplier Supply Tracking &nbsp;·&nbsp; لوحة متابعة التوريد للموردين</div></div>
+      <div class="tools">
+        <div class="pill off" id="status"><span class="d"></span><span id="statusTxt">Loading…</span></div>
+        <button class="btn primary" id="refreshBtn">🔄 &nbsp;Refresh</button>
+        <a class="btn" id="openSheetTop" target="_blank" title="افتح ملف Google Sheet المرتبط · Open linked Google Sheet">📄 Open Google Sheet</a>
+        <a class="btn gold" href="pm.html" title="Project Manager Portal">Project Manager Portal</a>
+        <div class="pill" style="cursor:pointer" onclick="window.print()">⤓</div>
+      </div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <section class="view active" id="view-overview">
+      <div class="setup" id="setup" style="display:none">⚙️ <b>للتفعيل اللحظي:</b> حط معرّف الشيت في <code>SHEET_ID</code> أعلى السكربت. دلوقتي بيعرض آخر نسخة محفوظة.</div>
+      <div class="grid kpis" id="kpis"></div>
+      <div class="grid row2">
+        <div class="card"><div class="ph"><h3>Supply Overview &nbsp;<span class="muted" style="font-size:12px">نظرة عامة</span></h3><div class="sel">By Project ▾</div></div>
+          <div class="bignum" id="ovHead"></div><div id="areaChart"></div></div>
+        <div class="card"><div class="ph"><h3>By Category &nbsp;<span class="muted" style="font-size:12px">حسب الفئة</span></h3></div>
+          <div class="donutwrap"><div id="donut"></div><div class="legend" id="legend"></div></div></div>
+      </div>
+      <div class="grid row3">
+        <div class="card"><div class="ph"><h3>Top Projects</h3><div class="sel">By Required ▾</div></div><div id="topProjects"></div></div>
+        <div class="card"><div class="ph"><h3>Category Performance &nbsp;<span class="muted" style="font-size:12px">أداء الفئات</span></h3></div><div id="catPerf"></div></div>
+        <div class="card"><div class="ph"><h3>Supply Performance</h3><div class="sel">Required ▾</div></div><div class="bignum" style="font-size:18px;margin-bottom:4px">By Project</div><div id="barChart"></div></div>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section class="view" id="view-projects">
+      <div class="card"><div class="ph"><h3>Projects &nbsp;<span class="muted" style="font-size:12px">تفاصيل المشاريع</span></h3><div class="sel">All values in SAR</div></div>
+        <table class="tbl"><thead><tr><th>Project / المشروع</th><th>Required</th><th>PO</th><th>Received</th><th>In-Transit</th><th>Not-Ordered</th><th>% Received</th></tr></thead><tbody id="projTable"></tbody></table>
+      </div>
+      <div class="card" style="margin-top:16px"><div class="ph"><h3>Required vs Received &nbsp;<span class="muted" style="font-size:12px">مطلوب مقابل موَرَّد</span></h3></div><div id="projBars"></div></div>
+    </section>
+
+    <!-- CATEGORIES -->
+    <section class="view" id="view-categories">
+      <div class="grid row2">
+        <div class="card"><div class="ph"><h3>Categories &nbsp;<span class="muted" style="font-size:12px">الفئات</span></h3></div>
+          <table class="tbl"><thead><tr><th>Category / الفئة</th><th>Required</th><th>Received</th><th>% Received</th><th>Qty (pcs)</th></tr></thead><tbody id="catTable"></tbody></table></div>
+        <div class="card"><div class="ph"><h3>Share by Category &nbsp;<span class="muted" style="font-size:12px">النسبة</span></h3></div>
+          <div class="donutwrap"><div id="donut2"></div><div class="legend" id="legend2"></div></div></div>
+      </div>
+    </section>
+
+
+    <section class="view" id="view-reports">
+      <div class="card"><div class="ph"><h3>Reports &nbsp;<span class="muted" style="font-size:12px">تقارير</span></h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn gold" onclick="genPPTX()">📊 تنزيل تقرير PowerPoint</button><a class="btn" id="openSheet" target="_blank">📄 Open Google Sheet</a><button class="btn" onclick="window.print()">⤓ Print / PDF</button></div></div>
+        <table class="tbl"><thead><tr><th>Metric / البند</th><th>Value (SAR)</th><th>% of Required</th></tr></thead><tbody id="repTable"></tbody></table>
+        <p class="muted" style="font-size:12px;margin-top:14px">📊 زر <b>تنزيل تقرير PowerPoint</b> بيعمل عرض احترافي بالبراند من الأرقام اللحظية (غلاف + ملخّص تنفيذي + جدول المشاريع + الفئات + رسم) — نزّله مرتين أسبوعياً أو أي وقت.<br>التعديل من Google Sheet → الأرقام تتحدّث هنا تلقائياً.</p>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="ph"><h3>📋 تقارير تفصيلية &nbsp;<span class="muted" style="font-size:12px">Detailed Item Reports</span></h3></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+          <button class="btn gold" id="rbND" onclick="detailReport('nd')">📥 مواد لم يتم توريدها</button>
+          <button class="btn gold" id="rbNO" onclick="detailReport('no')">🛒 مواد لم يتم طلبها</button>
+          <select id="rProj" onchange="renderDetail()" style="background:#0f1426;border:1px solid #1e2a44;color:#e6edf7;border-radius:8px;padding:8px 10px;font-size:13px"><option value="">كل المشاريع</option></select>
+          <span id="rInfo" class="muted" style="font-size:12px"></span>
+          <span style="margin-inline-start:auto"></span>
+          <button class="btn" id="rExcel" onclick="exportDetail('csv')" style="display:none">⬇ Excel</button>
+          <button class="btn" id="rPdf" onclick="exportDetail('pdf')" style="display:none">⬇ PDF</button>
+        </div>
+        <div style="max-height:55vh;overflow:auto">
+        <table class="tbl"><thead><tr><th>المشروع</th><th>الصنف</th><th>الكمية</th><th>سعر الوحدة</th><th>القيمة (SAR)</th></tr></thead><tbody id="rBody"><tr><td colspan="5" style="text-align:center;color:#8b97ad;padding:24px">اختار نوع التقرير من فوق 👆</td></tr></tbody></table>
+        </div>
+        <p class="muted" style="font-size:12px;margin-top:12px">📥 <b>لم يتم توريدها</b> = اتطلبت ولسه في الطريق (متبقّي) · 🛒 <b>لم يتم طلبها</b> = لسه ماتعملّهاش أمر شراء. نزّلهم <b>Excel</b> أو <b>PDF</b>.</p>
+      </div>
+    </section>
+
+    <div class="sig"><span class="ln"></span><span class="satc"><b>SATC</b><i>ساتك</i></span><span class="ln"></span></div>
+  </main>
+</div>
+<div style="position:fixed;right:14px;bottom:11px;z-index:9999;font:600 11px 'Segoe UI',Arial,sans-serif;color:#c9a227;background:rgba(10,14,26,.62);padding:5px 13px;border-radius:20px;border:1px solid rgba(201,162,39,.32);letter-spacing:.3px;pointer-events:none;box-shadow:0 2px 10px rgba(0,0,0,.3)"><span style="opacity:.75;color:#cdd8ee;font-weight:400">Created by</span>&nbsp; Mahmoud Taie</div>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script>
+/* ===== Google Sheet — تحديث لحظي ===== */
+const SHEET_ID  = "1wt144VinDfHl-kmzybo1lIJNUltFSjb3C1c5it_oWtM";
+const SHEET_TAB = "Summary";
+const POLL_SEC  = 30;
+const SHEET_EDIT = "https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/edit";
+function csvUrl(){ return SHEET_ID ? `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_TAB)}&_=${Date.now()}` : ""; }
+/* ===================================== */
+const FALLBACK = {projects:[
+  {name:'P3A',req:227885,po:226224,recv:27166,transit:199058,noto:1661},
+  {name:'Faisalia North',req:3267481,po:3267481,recv:1845410,transit:1422071,noto:0},
+  {name:'Faisalia South',req:9235721,po:5285901,recv:4591444,transit:694457,noto:3949820},
+  {name:'GRC1',req:9648068,po:3716678,recv:0,transit:3716678,noto:5931390},
+  {name:'North Obhor',req:5198279,po:3346748,recv:2725963,transit:620785,noto:1851531}],
+  cats:[{name:'قطع / Fittings',req:12764822,recv:5957801,qty:1514},{name:'صمامات / Valves',req:14812612,recv:3232182,qty:528}]};
+const PCOLORS=['#3b82f6','#8b5cf6','#06b6d4','#22c55e','#f59e0b'];
+const PIC=['\u{1F4E6}','\u{1F3D7}','\u{1F3ED}','\u{1F9F1}','\u{1F30A}'];
+const CCOLORS=['#6366f1','#f43f5e','#22c55e','#f59e0b'];
+const NS='http://www.w3.org/2000/svg';
+let D = FALLBACK, LINEITEMS=[];
+const n=x=>Math.round(+x||0).toLocaleString('en-US');
+window.toNum=x=>Number(String(x==null?'':x).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/٫/g,'.').replace(/[^\d.\-]/g,''))||0;
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const sum=(a,k)=>a.reduce((s,o)=>s+(+o[k]||0),0);
+const el=(t,a={})=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e};
+const cv=c=>getComputedStyle(document.documentElement).getPropertyValue(c).trim();
+function parseCSV(text){const rows=[];let field='',row=[],q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c=='"'){if(text[i+1]=='"'){field+='"';i++;}else q=false;}else field+=c;}
+    else{if(c=='"')q=true;else if(c==','){row.push(field);field='';}else if(c=='\n'){row.push(field);rows.push(row);row=[];field='';}else if(c!='\r')field+=c;}}
+  if(field.length||row.length){row.push(field);rows.push(row);}return rows;}
+function sheetToData(text){const rows=parseCSV(text).filter(r=>r.length>1&&r.join('').trim());
+  const toNum=window.toNum;
+  const h=rows[0].map(x=>x.trim().toLowerCase());const idx=k=>h.indexOf(k);const col=(k,p)=>{const i=idx(k);return i>=0?i:p;};
+  const ik=col('kind',0),inm=col('name',1),ir=col('req',2),ipo=col('po',3),irc=col('recv',4),it=col('transit',5),ino=col('noto',6),iq=col('qty',7);
+  const projects=[],cats=[];
+  for(let r=1;r<rows.length;r++){const row=rows[r];const kind=(row[ik]||'').trim().toLowerCase();const name=(row[inm]||'').trim();if(!name)continue;
+    if(kind=='project')projects.push({name,req:toNum(row[ir]),po:toNum(row[ipo]),recv:toNum(row[irc]),transit:toNum(row[it]),noto:toNum(row[ino])});
+    else if(kind=='category')cats.push({name,req:toNum(row[ir]),recv:toNum(row[irc]),qty:toNum(row[iq])});}
+  return {projects,cats};}
+function setStatus(mode){const p=document.getElementById('status'),t=document.getElementById('statusTxt');p.classList.remove('live','off');
+  if(mode=='live'){p.classList.add('live');t.textContent='Live · '+new Date().toLocaleTimeString('en-GB');document.getElementById('setup').style.display='none';}
+  else{p.classList.add('off');t.textContent='Offline snapshot';document.getElementById('setup').style.display=SHEET_ID?'none':'block';}}
+const PTABS=["P3A","Faisalia North","Faisalia South","GRC1","North Obhor"];
+function fc(h,subs,fb){for(let i=0;i<h.length;i++)for(const s of subs)if((h[i]||'').includes(s))return i;return fb;}
+async function loadData(){const toNum=window.toNum;
+  if(SHEET_ID){try{
+    const projects=[],FT={name:'قطع / Fittings',req:0,recv:0,qty:0},VL={name:'صمامات / Valves',req:0,recv:0,qty:0};LINEITEMS=[];
+    for(const tab of PTABS){
+      const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}&_=${Date.now()}`;
+      const r=await fetch(url,{cache:'no-store'});const rows=parseCSV(await r.text()).filter(x=>x.length>1);
+      if(rows.length<2)throw new Error('empty '+tab);
+      const h=rows[0].map(x=>(x||'').trim().toLowerCase());
+      const it=fc(h,['type'],0),idd=fc(h,['item description','description'],6),iq=fc(h,['qty required site'],8),ir=fc(h,['t.price required site'],13),ip=fc(h,['required po'],14),irc=fc(h,['t.price received'],15),itr=fc(h,['t.price remaining'],16),ino=fc(h,['t.price not issued'],17),iu=fc(h,['unit price'],7),iqr=fc(h,['qty remaining'],11),iqn=fc(h,['qty not issued'],12);
+      let req=0,po=0,recv=0,transit=0,noto=0;
+      for(let i=1;i<rows.length;i++){const row=rows[i];if(!(row[idd]||'').trim())continue;
+        const vr=toNum(row[ir]),vp=toNum(row[ip]),vc=toNum(row[irc]),vt=toNum(row[itr]),vn=toNum(row[ino]),vq=toNum(row[iq]);
+        req+=vr;po+=vp;recv+=vc;transit+=vt;noto+=vn;
+        const qr=toNum(row[iqr]),qn=toNum(row[iqn]);if(qr>0||qn>0)LINEITEMS.push({p:tab,d:(row[idd]||'').trim(),u:toNum(row[iu]),qr,vr:vt,qn,vn});
+        const C=((row[it]||'').trim().toUpperCase()==='V')?VL:FT;C.req+=vr;C.recv+=vc;C.qty+=vq;}
+      projects.push({name:tab,req,po,recv,transit,noto});
+    }
+    if(projects.length){D={projects,cats:[FT,VL]};setStatus('live');return;}
+  }catch(e){console.warn(e);}}
+  D=FALLBACK;setStatus('offline');}
+function sparkSVG(values,color){const w=210,h=46,max=Math.max(...values),min=Math.min(...values),rng=(max-min)||1;
+  const pts=values.map((v,i)=>[i/(values.length-1)*w,h-6-((v-min)/rng)*(h-14)]);
+  const svg=el('svg',{width:w,height:h,viewBox:`0 0 ${w} ${h}`});const id='s'+Math.floor(Math.random()*1e6);
+  const defs=el('defs');const lg=el('linearGradient',{id,x1:0,y1:0,x2:0,y2:1});
+  lg.append(el('stop',{offset:'0%','stop-color':color,'stop-opacity':.45}));lg.append(el('stop',{offset:'100%','stop-color':color,'stop-opacity':0}));defs.append(lg);svg.append(defs);
+  const line=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  svg.append(el('path',{d:`${line} L ${w} ${h} L 0 ${h} Z`,fill:`url(#${id})`}));
+  svg.append(el('path',{d:line,fill:'none',stroke:color,'stroke-width':2,'stroke-linecap':'round','stroke-linejoin':'round'}));return svg;}
+const iconBg={'--blue':'linear-gradient(135deg,#3b82f6,#2563eb)','--green':'linear-gradient(135deg,#22c55e,#16a34a)','--purple':'linear-gradient(135deg,#8b5cf6,#7c3aed)','--orange':'linear-gradient(135deg,#f59e0b,#d97706)','--cyan':'linear-gradient(135deg,#06b6d4,#0891b2)'};
+const SP=[[40,46,44,52,58,55,63,67,72,68,75,80],[30,34,40,38,44,50,47,53,58,60,57,62],[20,24,22,28,30,34,33,38,36,42,45,48],[35,32,38,30,34,28,33,26,30,24,28,22],[50,46,52,48,44,50,45,42,46,40,44,38]];
+function kpi(){const p=D.projects;return[
+  {label:'Total Required',v:sum(p,'req'),color:'--blue',ic:'$'},{label:'Purchase Orders',v:sum(p,'po'),color:'--green',ic:'🛒'},
+  {label:'Received',v:sum(p,'recv'),color:'--purple',ic:'📦'},{label:'In Transit',v:sum(p,'transit'),color:'--orange',ic:'🚚'},
+  {label:'Not Ordered',v:sum(p,'noto'),color:'--cyan',ic:'⏳'}];}
+function renderKPI(){const K=kpi();const req=K[0].v||1;
+  document.getElementById('kpis').innerHTML=K.map((k,i)=>`<div class="card kpi"><div class="top"><div class="ic" style="background:${iconBg[k.color]}">${k.ic}</div>${k.label}</div>
+  <div class="val"><small>SAR</small>${n(k.v)}</div><div class="chg"><span class="up">▲ ${i==0?'100%':((k.v/req*100).toFixed(1)+'%')}</span><span class="vs">of required</span></div><div class="spark" id="sp${i}"></div></div>`).join('');
+  K.forEach((k,i)=>document.getElementById('sp'+i).append(sparkSVG(SP[i],cv(k.color))));
+  document.getElementById('ovHead').innerHTML=`SAR ${n(K[2].v)} <span class="up">▲ ${(K[2].v/req*100).toFixed(1)}%</span><span class="vs">received of required</span>`;}
+function renderArea(){const host=document.getElementById('areaChart');host.innerHTML='';
+  const order=[...D.projects].sort((a,b)=>a.req-b.req);const labels=order.map(p=>p.name),req=order.map(p=>+p.req),recv=order.map(p=>+p.recv);
+  const w=760,h=290,pl=48,pr=14,pt=16,pb=34,iw=w-pl-pr,ih=h-pt-pb,max=(Math.max(...req)||1)*1.12;
+  const X=i=>pl+i/(labels.length-1)*iw,Y=v=>pt+ih-(v/max)*ih;const svg=el('svg',{width:'100%',viewBox:`0 0 ${w} ${h}`});
+  const defs=el('defs');const lg=el('linearGradient',{id:'ag',x1:0,y1:0,x2:0,y2:1});lg.append(el('stop',{offset:'0%','stop-color':'#3b82f6','stop-opacity':.45}));lg.append(el('stop',{offset:'100%','stop-color':'#3b82f6','stop-opacity':0}));defs.append(lg);svg.append(defs);
+  for(let g=0;g<=4;g++){const y=pt+ih*g/4,v=max*(1-g/4);svg.append(el('line',{x1:pl,y1:y,x2:w-pr,y2:y,stroke:'rgba(255,255,255,.05)'}));const tx=el('text',{x:pl-8,y:y+4,fill:'#8b97ad','font-size':10,'text-anchor':'end'});tx.textContent=Math.round(v/1000)+'K';svg.append(tx);}
+  labels.forEach((l,i)=>{const tx=el('text',{x:X(i),y:h-12,fill:'#8b97ad','font-size':10.5,'text-anchor':'middle'});tx.textContent=l;svg.append(tx);});
+  const pa=a=>a.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)).join(' ');
+  svg.append(el('path',{d:`${pa(req)} L ${X(labels.length-1)} ${pt+ih} L ${pl} ${pt+ih} Z`,fill:'url(#ag)'}));
+  svg.append(el('path',{d:pa(req),fill:'none',stroke:'#3b82f6','stroke-width':2.5,'stroke-linejoin':'round'}));
+  svg.append(el('path',{d:pa(recv),fill:'none',stroke:'#8b5cf6','stroke-width':2,'stroke-dasharray':'5 4'}));
+  req.forEach((v,i)=>svg.append(el('circle',{cx:X(i),cy:Y(v),r:4,fill:'#0a0e1a',stroke:'#3b82f6','stroke-width':2.5})));host.append(svg);}
+function doDonut(host,leg){host.innerHTML='';const segs=D.cats.map((c,i)=>({v:+c.req,color:CCOLORS[i%CCOLORS.length]}));const total=segs.reduce((s,x)=>s+x.v,0)||1;
+  const w=180,cx=90,cy=90,r=66,rr=44;let ang=-90;const svg=el('svg',{width:w,height:w,viewBox:`0 0 ${w} ${w}`});
+  segs.forEach(s=>{const a0=ang,a1=ang+s.v/total*360;ang=a1;const lrg=(a1-a0)>180?1:0;const p=(a,rad)=>[cx+rad*Math.cos(a*Math.PI/180),cy+rad*Math.sin(a*Math.PI/180)];
+    const o0=p(a0,r),o1=p(a1,r),i1=p(a1,rr),i0=p(a0,rr);svg.append(el('path',{d:`M ${o0} A ${r} ${r} 0 ${lrg} 1 ${o1} L ${i1} A ${rr} ${rr} 0 ${lrg} 0 ${i0} Z`,fill:s.color,stroke:'#0a0e1a','stroke-width':3}));});
+  const t1=el('text',{x:cx,y:cy-2,fill:'#fff','font-size':17,'text-anchor':'middle','font-weight':700});t1.textContent='SAR '+(total/1e6).toFixed(1)+'M';
+  const t2=el('text',{x:cx,y:cy+16,fill:'#8b97ad','font-size':11,'text-anchor':'middle'});t2.textContent='Total Required';svg.append(t1);svg.append(t2);host.append(svg);
+  leg.innerHTML=D.cats.map((c,i)=>`<div class="lg"><span class="sw" style="background:${CCOLORS[i%CCOLORS.length]}"></span><span>${c.name}</span><span class="vv">${n(c.req)}</span><span class="pp">${(+c.req/total*100).toFixed(1)}%</span></div>`).join('');}
+function renderTop(){const mx=Math.max(...D.projects.map(p=>+p.req))||1;const ord=[...D.projects].sort((a,b)=>b.req-a.req);
+  document.getElementById('topProjects').innerHTML=ord.map((p,k)=>{const ci=D.projects.indexOf(p);return `<div class="tprow"><div class="rk">${k+1}</div><div class="av">${PIC[ci%PIC.length]}</div><div><div class="nm">${p.name}</div><div class="bar"><i style="width:${(p.req/mx*100).toFixed(0)}%;background:${PCOLORS[ci%PCOLORS.length]}"></i></div></div><div class="rv">SAR ${n(p.req)}</div></div>`;}).join('');}
+function renderCatPerf(){document.getElementById('catPerf').innerHTML=D.cats.map((c,i)=>{const pct=(+c.req?(+c.recv/+c.req*100):0);return `<div class="catrow"><div class="t"><b>${c.name}</b><b>${pct.toFixed(1)}%</b></div><div class="pbar"><i style="width:${Math.min(pct,100)}%;background:linear-gradient(90deg,${CCOLORS[i%CCOLORS.length]},${CCOLORS[i%CCOLORS.length]}cc)"></i></div><div class="meta"><span>Received SAR ${n(c.recv)}</span><span>Qty ${n(c.qty)} pcs</span></div></div>`;}).join('');}
+function bars(host,series2){host.innerHTML='';const order=[...D.projects].sort((a,b)=>b.req-a.req);const w=760,h=240,pl=40,pb=30,pt=12,pr=10,iw=w-pl-pr,ih=h-pt-pb;
+  const max=(Math.max(...order.map(p=>+p.req))||1)*1.1;const svg=el('svg',{width:'100%',viewBox:`0 0 ${w} ${h}`});
+  const defs=el('defs');const lg=el('linearGradient',{id:'bg2',x1:0,y1:0,x2:0,y2:1});lg.append(el('stop',{offset:'0%','stop-color':'#8b5cf6'}));lg.append(el('stop',{offset:'100%','stop-color':'#3b82f6'}));defs.append(lg);svg.append(defs);
+  for(let g=0;g<=3;g++){const y=pt+ih*g/3;svg.append(el('line',{x1:pl,y1:y,x2:w-pr,y2:y,stroke:'rgba(255,255,255,.05)'}));const tx=el('text',{x:pl-6,y:y+4,fill:'#8b97ad','font-size':9,'text-anchor':'end'});tx.textContent=Math.round(max*(1-g/3)/1000)+'K';svg.append(tx);}
+  const gw=iw/order.length;const bw=series2?gw*.28:gw*.5;
+  order.forEach((p,i)=>{const gx=pl+i*gw+gw/2;
+    const bh=(+p.req)/max*ih;svg.append(el('rect',{x:gx-(series2?bw+2:bw/2),y:pt+ih-bh,width:bw,height:bh,rx:4,fill:'url(#bg2)'}));
+    if(series2){const rh=(+p.recv)/max*ih;svg.append(el('rect',{x:gx+2,y:pt+ih-rh,width:bw,height:rh,rx:4,fill:'#22c55e'}));}
+    const tx=el('text',{x:gx,y:h-10,fill:'#8b97ad','font-size':9.5,'text-anchor':'middle'});tx.textContent=p.name.split(' ')[0];svg.append(tx);});
+  host.append(svg);}
+function renderProjects(){const tot={req:sum(D.projects,'req'),po:sum(D.projects,'po'),recv:sum(D.projects,'recv'),transit:sum(D.projects,'transit'),noto:sum(D.projects,'noto')};
+  let html=D.projects.map((p,i)=>{const pct=(+p.req?(+p.recv/+p.req*100):0);return `<tr><td><b>${p.name}</b></td><td>${n(p.req)}</td><td>${n(p.po)}</td><td>${n(p.recv)}</td><td>${n(p.transit)}</td><td>${n(p.noto)}</td><td>${pct.toFixed(1)}%<div class="pb"><i style="width:${Math.min(pct,100)}%;background:${PCOLORS[i%PCOLORS.length]}"></i></div></td></tr>`;}).join('');
+  html+=`<tr class="total"><td>الإجمالي / Total</td><td>${n(tot.req)}</td><td>${n(tot.po)}</td><td>${n(tot.recv)}</td><td>${n(tot.transit)}</td><td>${n(tot.noto)}</td><td>${(tot.req?tot.recv/tot.req*100:0).toFixed(1)}%</td></tr>`;
+  document.getElementById('projTable').innerHTML=html; bars(document.getElementById('projBars'),true);}
+function renderCategories(){const tot={req:sum(D.cats,'req'),recv:sum(D.cats,'recv'),qty:sum(D.cats,'qty')};
+  let html=D.cats.map((c,i)=>{const pct=(+c.req?(+c.recv/+c.req*100):0);return `<tr><td><b style="color:${CCOLORS[i%CCOLORS.length]}">${c.name}</b></td><td>${n(c.req)}</td><td>${n(c.recv)}</td><td>${pct.toFixed(1)}%<div class="pb"><i style="width:${Math.min(pct,100)}%;background:${CCOLORS[i%CCOLORS.length]}"></i></div></td><td>${n(c.qty)}</td></tr>`;}).join('');
+  html+=`<tr class="total"><td>الإجمالي / Total</td><td>${n(tot.req)}</td><td>${n(tot.recv)}</td><td>${(tot.req?tot.recv/tot.req*100:0).toFixed(1)}%</td><td>${n(tot.qty)}</td></tr>`;
+  document.getElementById('catTable').innerHTML=html; doDonut(document.getElementById('donut2'),document.getElementById('legend2'));}
+function renderReports(){const K=kpi();const req=K[0].v||1;
+  document.getElementById('repTable').innerHTML=K.map((k,i)=>`<tr><td><b>${k.label}</b></td><td>SAR ${n(k.v)}</td><td>${i==0?'100%':(k.v/req*100).toFixed(1)+'%'}</td></tr>`).join('');
+  document.getElementById('openSheet').href=SHEET_EDIT;
+  document.getElementById('openSheetTop').href=SHEET_EDIT;}
+/* ===== PowerPoint report (client-side, from live data) ===== */
+function buildDeck(D,K){
+  const pptx=new PptxGenJS(); pptx.layout='LAYOUT_WIDE';
+  const NAVY='1F3864',GOLD='C9A227',WHITE='FFFFFF',GRAY='6B7280',LIGHT='F4F6FA',DARK='222B3A';
+  const nn=x=>Math.round(+x||0).toLocaleString('en-US');
+  const ssum=(a,k)=>a.reduce((s,o)=>s+(+o[k]||0),0);
+  const today=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+  const reqTot=K[0].v||1;
+  function header(s,title){
+    s.addShape(pptx.ShapeType.rect,{x:0,y:0,w:13.33,h:0.95,fill:{color:NAVY}});
+    s.addShape(pptx.ShapeType.rect,{x:0,y:0.95,w:13.33,h:0.06,fill:{color:GOLD}});
+    s.addText(title,{x:0.5,y:0.1,w:9,h:0.75,fontSize:24,bold:true,color:WHITE,valign:'middle'});
+    s.addText('SATC',{x:10.9,y:0.1,w:1.95,h:0.75,fontSize:22,bold:true,color:GOLD,align:'right',valign:'middle'});
+    s.addText('Supplier Supply Tracking  ·  '+today,{x:0.5,y:7.06,w:12.33,h:0.3,fontSize:9,color:GRAY,align:'center'});
+  }
+  let s=pptx.addSlide(); s.background={color:NAVY};
+  s.addText('SATC',{x:0,y:1.85,w:13.33,h:1.2,fontSize:66,bold:true,color:GOLD,align:'center'});
+  s.addShape(pptx.ShapeType.rect,{x:5.17,y:3.12,w:3.0,h:0.04,fill:{color:GOLD}});
+  s.addText('Supplier Supply Tracking',{x:0,y:3.25,w:13.33,h:0.6,fontSize:26,color:WHITE,align:'center'});
+  s.addText('Weekly Supply Report',{x:0,y:3.95,w:13.33,h:0.5,fontSize:18,color:'AEBBD4',align:'center'});
+  s.addText(today,{x:0,y:6.4,w:13.33,h:0.4,fontSize:14,color:'8FA2C6',align:'center'});
+  s=pptx.addSlide(); s.background={color:WHITE}; header(s,'Executive Summary');
+  const cardW=2.46,gap=0.13,startX=0.5;
+  K.forEach((k,i)=>{const x=startX+i*(cardW+gap);
+    s.addShape(pptx.ShapeType.roundRect,{x,y:1.55,w:cardW,h:2.0,fill:{color:LIGHT},line:{color:'E1E7F0',width:1},rectRadius:0.1});
+    s.addText(k.label.toUpperCase(),{x:x+0.05,y:1.68,w:cardW-0.1,h:0.5,fontSize:10,bold:true,color:GRAY,align:'center',valign:'middle'});
+    s.addText([{text:'SAR ',options:{fontSize:10,color:GRAY}},{text:nn(k.v),options:{fontSize:18,bold:true,color:NAVY}}],{x:x+0.05,y:2.25,w:cardW-0.1,h:0.6,align:'center',valign:'middle'});
+    s.addText((i==0?'100%':(k.v/reqTot*100).toFixed(1)+'%')+' of required',{x:x+0.05,y:3.0,w:cardW-0.1,h:0.4,fontSize:10,color:GOLD,align:'center'});});
+  s.addText([{text:'SAR '+nn(K[2].v)+' received',options:{bold:true,color:NAVY}},{text:'   ('+(K[2].v/reqTot*100).toFixed(1)+'% of total required)',options:{color:GRAY}}],{x:0.5,y:4.05,w:12.33,h:0.5,fontSize:16,align:'center'});
+  s=pptx.addSlide(); s.background={color:WHITE}; header(s,'By Project');
+  const ph=['Project','Required','PO Issued','Received','In Transit','Not Ordered','% Recv'];
+  const pr=[ ph.map(h=>({text:h,options:{bold:true,color:WHITE,fill:{color:NAVY},align:'center',valign:'middle'}})) ];
+  D.projects.forEach(p=>{const pct=p.req?(p.recv/p.req*100):0;
+    pr.push([{text:p.name,options:{bold:true,align:'left'}},{text:nn(p.req),options:{align:'right'}},{text:nn(p.po),options:{align:'right'}},{text:nn(p.recv),options:{align:'right'}},{text:nn(p.transit),options:{align:'right'}},{text:nn(p.noto),options:{align:'right'}},{text:pct.toFixed(1)+'%',options:{align:'right'}}]);});
+  const PT={req:ssum(D.projects,'req'),po:ssum(D.projects,'po'),recv:ssum(D.projects,'recv'),transit:ssum(D.projects,'transit'),noto:ssum(D.projects,'noto')};
+  const tf={bold:true,fill:{color:'E9EDF4'}};
+  pr.push([{text:'TOTAL',options:{...tf,align:'left'}},{text:nn(PT.req),options:{...tf,align:'right'}},{text:nn(PT.po),options:{...tf,align:'right'}},{text:nn(PT.recv),options:{...tf,align:'right'}},{text:nn(PT.transit),options:{...tf,align:'right'}},{text:nn(PT.noto),options:{...tf,align:'right'}},{text:(PT.req?PT.recv/PT.req*100:0).toFixed(1)+'%',options:{...tf,align:'right'}}]);
+  s.addTable(pr,{x:0.5,y:1.5,w:12.33,colW:[2.9,1.7,1.7,1.6,1.63,1.6,1.2],fontSize:11,color:DARK,border:{type:'solid',color:'D9DEE8',pt:0.5},valign:'middle',rowH:0.42});
+  s=pptx.addSlide(); s.background={color:WHITE}; header(s,'By Category & Performance');
+  const chh=['Category','Required','Received','% Recv','Qty'];
+  const cr=[ chh.map(h=>({text:h,options:{bold:true,color:WHITE,fill:{color:NAVY},align:'center'}})) ];
+  D.cats.forEach(c=>{const pct=c.req?(c.recv/c.req*100):0;
+    cr.push([{text:c.name,options:{bold:true,align:'left'}},{text:nn(c.req),options:{align:'right'}},{text:nn(c.recv),options:{align:'right'}},{text:pct.toFixed(1)+'%',options:{align:'right'}},{text:nn(c.qty),options:{align:'right'}}]);});
+  s.addTable(cr,{x:0.5,y:1.55,w:6.0,colW:[2.0,1.1,1.1,1.0,0.8],fontSize:11,color:DARK,border:{type:'solid',color:'D9DEE8',pt:0.5},valign:'middle',rowH:0.5});
+  s.addChart(pptx.ChartType.bar,[
+    {name:'Required',labels:D.projects.map(p=>p.name),values:D.projects.map(p=>+p.req)},
+    {name:'Received',labels:D.projects.map(p=>p.name),values:D.projects.map(p=>+p.recv)}
+  ],{x:6.8,y:1.5,w:6.0,h:4.7,barDir:'col',chartColors:['3B82F6','22C55E'],showLegend:true,legendPos:'b',showTitle:true,title:'Required vs Received by Project',titleFontSize:12,catAxisLabelFontSize:8,valAxisLabelFontSize:8});
+  return pptx;
+}
+function genPPTX(){
+  if(typeof PptxGenJS==='undefined'){alert('مكتبة PowerPoint لسه بتحمّل أو النت مقطوع — استنى ثانية وجرّب تاني.');return;}
+  try{ buildDeck(D,kpi()).writeFile({fileName:'SATC Supply Report - '+new Date().toISOString().slice(0,10)+'.pptx'}); }
+  catch(e){ console.error(e); alert('خطأ في توليد التقرير: '+(e&&e.message||e)); }
+}
+function renderAll(){renderKPI();renderArea();doDonut(document.getElementById('donut'),document.getElementById('legend'));renderTop();renderCatPerf();bars(document.getElementById('barChart'),false);renderProjects();renderCategories();renderReports();}
+let CUR_REP=null;
+function detailReport(type){CUR_REP={type};const sel=document.getElementById('rProj');if(sel.options.length<=1){[...new Set(LINEITEMS.map(m=>m.p))].forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;sel.append(o);});}
+  document.getElementById('rbND').style.opacity=type=='nd'?'1':'.55';document.getElementById('rbNO').style.opacity=type=='no'?'1':'.55';renderDetail();}
+function detailRows(){if(!CUR_REP)return[];const pf=document.getElementById('rProj').value;let items=CUR_REP.type=='nd'?LINEITEMS.filter(m=>m.qr>0).map(m=>({p:m.p,d:m.d,q:m.qr,u:m.u,v:m.vr})):LINEITEMS.filter(m=>m.qn>0).map(m=>({p:m.p,d:m.d,q:m.qn,u:m.u,v:m.vn}));if(pf)items=items.filter(x=>x.p===pf);return items;}
+function renderDetail(){if(!CUR_REP)return;const rows=detailRows();const tot=rows.reduce((s,x)=>s+(+x.v||0),0);
+  CUR_REP.title=CUR_REP.type=='nd'?'مواد لم يتم توريدها':'مواد لم يتم طلبها';CUR_REP.file=CUR_REP.type=='nd'?'Not_Delivered':'Not_Ordered';
+  document.getElementById('rInfo').textContent=rows.length+' صنف · SAR '+n(tot);
+  const show=rows.length?'':'none';document.getElementById('rExcel').style.display=show;document.getElementById('rPdf').style.display=show;
+  document.getElementById('rBody').innerHTML=rows.length?rows.map(x=>`<tr><td><b>${esc(x.p)}</b></td><td style="text-align:left">${esc(x.d)}</td><td>${n(x.q)}</td><td>${n(x.u)}</td><td>${n(x.v)}</td></tr>`).join('')+`<tr style="background:#16203f;font-weight:700"><td colspan="4">الإجمالي / Total</td><td>${n(tot)}</td></tr>`:'<tr><td colspan="5" style="text-align:center;color:#8b97ad;padding:24px">'+(LINEITEMS.length?'لا توجد أصناف في التقرير ده':'⏳ البيانات بتتحمّل من اللينك المنشور (مش متاحة في المعاينة المحلية)')+'</td></tr>';}
+function exportDetail(fmt){if(!CUR_REP)return;const rows=detailRows();if(!rows.length)return;const tot=rows.reduce((s,x)=>s+(+x.v||0),0);
+  if(fmt=='csv'){const q=s=>{s=String(s==null?'':s);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};const L=['Project,Item Description,Qty,Unit Price,Value (SAR)'];rows.forEach(x=>L.push([q(x.p),q(x.d),Math.round(x.q),Math.round(x.u),Math.round(x.v)].join(',')));L.push(',,,TOTAL,'+Math.round(tot));const b=new Blob(['\uFEFF'+L.join('\r\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=CUR_REP.file+'.csv';a.click();}
+  else{var w=window.open('','_blank');var rh='';rows.forEach(function(x){rh+='<tr><td>'+esc(x.p)+'</td><td>'+esc(x.d)+'</td><td class=r>'+n(x.q)+'</td><td class=r>'+n(x.u)+'</td><td class=r>'+n(x.v)+'</td></tr>';});var css='body{font-family:Segoe UI,Tahoma,Arial;padding:24px;color:#1a2238}h2{color:#16294a;margin:0 0 4px}.s{color:#b8901e;font-weight:700;margin-bottom:14px}table{width:100%;border-collapse:collapse;font-size:12.5px}th{background:#16294a;color:#fff;padding:8px;text-align:right}td{padding:6px 8px;border-bottom:1px solid #e3e3e3}.r{text-align:right}tbody tr:last-child td{font-weight:700;background:#f6f1dd}';var doc='<!doctype html><html dir=rtl><head><meta charset=utf-8><title>'+esc(CUR_REP.title)+'</title><style>'+css+'</style></head><body><h2>SATC - '+esc(CUR_REP.title)+'</h2><div class=s>'+rows.length+' items - SAR '+n(tot)+'</div><table><thead><tr><th>المشروع</th><th>الصنف</th><th>الكمية</th><th>سعر الوحدة</th><th>القيمة</th></tr></thead><tbody>'+rh+'<tr><td colspan=4>الإجمالي / Total</td><td class=r>'+n(tot)+'</td></tr></tbody></table></body></html>';w.document.write(doc);w.document.close();setTimeout(function(){try{w.focus();w.print();}catch(e){}},350);}}
+
+const VIEWS=[{id:'overview',label:'Overview',title:'Dashboard Overview'},{id:'projects',label:'Projects',title:'Projects'},{id:'categories',label:'Categories',title:'Categories'},{id:'reports',label:'Reports',title:'Reports'}];
+function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id=='view-'+id));
+  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('active',a.dataset.v==id));
+  const v=VIEWS.find(x=>x.id==id);if(v)document.getElementById('pageTitle').textContent=v.title;}
+document.getElementById('nav').innerHTML=VIEWS.map((v,i)=>`<a data-v="${v.id}" class="${i==0?'active':''}"${v.gold?' style="color:#c9a227;font-weight:700"':''}><span style="opacity:.85">${v.icon||'■'}</span>${v.label}</a>`).join('');
+document.querySelectorAll('#nav a').forEach(a=>a.onclick=()=>showView(a.dataset.v));
+document.getElementById('refreshBtn').onclick=()=>loadData().then(renderAll);
+document.getElementById('openSheetTop').href=SHEET_EDIT;
+loadData().then(renderAll);
+if(SHEET_ID && POLL_SEC>0){ setInterval(()=>loadData().then(renderAll), POLL_SEC*1000); }
+</script></body></html>
