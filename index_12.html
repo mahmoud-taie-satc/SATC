@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!--   SATC PORTAL  -  VERSION: FINAL-V10-NO-SLIDESHOW            -->
+<!--   (this is the NEWEST file - no slideshow, no images)        -->
+<!-- ============================================================ -->
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SATC — Supplier Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#14233D;--ink2:#1B2C4A;--gold:#C9A227;--gold2:#9C7C18;--field:#FBFCFE;--line:#C2CCDA;--text:#1B2430;--muted:#5C6675;--ok:#1E7F5C;--danger:#B23B3B;--font:"IBM Plex Sans Arabic","Segoe UI",Tahoma,Arial,sans-serif;--mono:"IBM Plex Mono",Consolas,monospace;}
+  *{box-sizing:border-box;} html,body{margin:0;padding:0;}
+  body{font-family:var(--font);color:var(--text);background:radial-gradient(120% 80% at 50% -10%,#16233c,#0a1120);-webkit-font-smoothing:antialiased;padding:30px 14px 60px;line-height:1.45;min-height:100vh;}
+  .portal{max-width:940px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 24px 70px -24px rgba(0,0,0,.7);}
+  .pmast{background:linear-gradient(135deg,var(--ink),var(--ink2));border-bottom:3px solid var(--gold);color:#fff;padding:22px 28px;}
+  .pmast .row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+  .pmono{border:1.5px solid var(--gold);color:var(--gold);font-weight:700;letter-spacing:2px;padding:6px 12px;border-radius:5px;font-size:15px;}
+  .pmast h2{margin:14px 0 2px;font-size:22px;font-weight:600;}
+  .pmast .ar{color:#D7DEEC;font-size:15px;}
+  .pmast .hint{font-size:11.5px;color:#9FAEC8;margin-top:8px;line-height:1.6;}
+  .pbody{padding:8px 28px 26px;}
+  .chooser-q{text-align:center;font-size:14px;font-weight:600;color:var(--ink);margin:22px 0 14px;}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .choice{cursor:pointer;border:1.5px solid #E0E6EF;border-radius:10px;padding:28px 18px;text-align:center;background:#fff;transition:border-color .15s,background .15s,box-shadow .15s,transform .15s;}
+  .choice:hover{border-color:var(--gold);background:#FBF9F2;box-shadow:0 10px 26px -14px rgba(20,35,61,.3);transform:translateY(-2px);}
+  .choice .ic{font-size:36px;margin-bottom:10px;line-height:1;}
+  .choice .t{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:3px;}
+  .choice .car{font-size:13px;color:var(--muted);}
+  .backlink{display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600;margin:2px 0 16px;background:none;border:none;font-family:var(--font);padding:0;}
+  .backlink:hover{color:var(--ink);}
+  @media(max-width:560px){.choices{grid-template-columns:1fr;}}
+  .psec{padding:22px 0;border-bottom:1px solid #E5E9F0;}
+  .psec:last-child{border-bottom:none;}
+  .peb{display:flex;align-items:baseline;gap:10px;margin-bottom:16px;}
+  .peb .num{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--gold2);border:1px solid #cdd5e2;border-radius:3px;padding:2px 7px;}
+  .peb h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink);}
+  .peb .ar{margin-inline-start:auto;color:var(--muted);font-size:13px;}
+  .pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .pf{display:flex;flex-direction:column;gap:6px;} .pf.full{grid-column:1/-1;}
+  .pf label{font-size:11px;font-weight:600;text-transform:uppercase;color:var(--ink);}
+  .req{color:var(--gold2);}
+  .pf input,.pf select{font-family:var(--font);font-size:14px;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:3px;padding:10px 11px;}
+  .pf input:focus,.pf select:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(20,35,61,.1);}
+  .docgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+  .docfield{border:1px dashed var(--line);border-radius:5px;padding:12px 14px;}
+  .docfield>label{display:block;font-size:11px;font-weight:600;color:var(--ink);text-transform:uppercase;margin-bottom:8px;}
+  .docfield .pick{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ink);cursor:pointer;font-weight:600;}
+  .docfield input[type=file]{display:none;}
+  .docfield .fn{display:block;font-family:var(--mono);font-size:11.5px;color:var(--ok);margin-top:6px;min-height:14px;}
+  .note{background:#F6F8FC;border:1px solid #E5E9F0;border-inline-start:3px solid var(--gold);border-radius:3px;padding:13px 16px;font-size:12.5px;color:var(--muted);line-height:1.6;}
+  .note .ar{display:block;margin-top:4px;}
+  .pactions{margin-top:20px;}
+  .pbtn{font-family:var(--font);font-size:15px;font-weight:600;border-radius:3px;padding:14px 28px;cursor:pointer;border:1px solid var(--ink);background:var(--ink);color:#fff;}
+  .pbtn:hover{background:#0d1a30;}
+  .pbtn.gold{background:var(--gold);border-color:var(--gold2);color:#1c1403;}
+  .pbtn.gold:hover{background:var(--gold2);color:#fff;}
+  .success{display:none;text-align:center;padding:50px 28px;}
+  .success.show{display:block;}
+  .success .ok{width:66px;height:66px;margin:0 auto 18px;border-radius:50%;background:#E8F6EF;color:var(--ok);display:flex;align-items:center;justify-content:center;font-size:36px;}
+  .success h2{margin:0 0 8px;font-size:24px;color:var(--ink);}
+  .success .status{display:inline-block;background:rgba(245,166,35,.16);color:var(--gold2);font-weight:700;border-radius:20px;padding:6px 18px;font-size:13px;margin:10px 0;}
+  .success p{color:var(--muted);font-size:14px;line-height:1.7;max-width:520px;margin:8px auto;}
+  footer{padding:18px 28px;background:var(--ink);color:#A9B6CC;font-size:11.5px;}
+  footer b{color:#fff;}
+  .ithead{display:grid;grid-template-columns:.35fr 2.1fr .55fr .55fr .95fr .95fr .95fr .35fr;gap:8px;padding-bottom:8px;border-bottom:2px solid var(--ink);font-size:10.5px;font-weight:600;text-transform:uppercase;color:var(--ink);}
+  .ithead .tr{text-align:right;}
+  .itrow{display:grid;grid-template-columns:.35fr 2.1fr .55fr .55fr .95fr .95fr .95fr .35fr;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #EDF0F5;}
+  .itrow .iln{font-family:var(--mono);color:var(--gold2);font-weight:600;text-align:center;}
+  .itrow input{width:100%;font-family:var(--font);font-size:13px;background:var(--field);border:1px solid var(--line);border-radius:3px;padding:8px;}
+  .itrow input:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(20,35,61,.1);}
+  .itrow .iqty,.itrow .iup,.itrow .idisc{font-family:var(--mono);text-align:right;}
+  .itrow .itot{text-align:right;font-family:var(--mono);font-weight:600;color:var(--ink);}
+  .qadd{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--ink);color:var(--ink);font-family:var(--font);font-weight:600;font-size:13px;border-radius:3px;padding:9px 15px;cursor:pointer;margin-top:12px;}
+  .qadd:hover{background:var(--ink);color:#fff;}
+  .rfqgrand{display:flex;justify-content:flex-end;gap:14px;align-items:baseline;margin-top:14px;padding-top:12px;border-top:2px solid var(--ink);}
+  .rfqgrand .lbl{font-size:12px;font-weight:600;text-transform:uppercase;color:var(--muted);}
+  .rfqgrand .val{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--ink);}
+  .del{background:#fff;border:1px solid #E2A0A0;color:#B23B3B;border-radius:4px;padding:6px 9px;cursor:pointer;font-size:14px;line-height:1;}
+  .del:hover{background:#B23B3B;color:#fff;}
+  @media (max-width:760px){
+    body{padding:14px 8px 40px;}.pbody,.pmast,footer{padding-left:18px;padding-right:18px;}
+    .pgrid{grid-template-columns:1fr;}.docgrid{grid-template-columns:1fr;}
+    .itrow{grid-template-columns:auto 1fr;gap:6px 10px;border:1px solid #E5E9F0;border-radius:6px;padding:12px;margin-bottom:10px;}.itrow>div:nth-child(2){grid-column:1/-1;}.itrow .itot{text-align:left;}
+  }
+</style>
+</head>
+<body>
+<div class="portal">
+  <div class="pmast">
+    <div class="row"><div class="pmono">SATC</div><div style="font-family:var(--mono);font-size:11.5px;color:#C6D0E2">Ref: <b id="ref" style="color:var(--gold)">SATC-…</b></div></div>
+    <h2 id="pTitle">Supplier Portal</h2>
+    <div class="ar" dir="rtl" id="pTitleAr">بوابة المورّد</div>
+    <div class="hint" id="pHint">Choose what you want to do, then submit for review by SATC Procurement. <span dir="rtl">اختر الإجراء ثم أرسل للمراجعة من قِبل إدارة المشتريات.</span></div>
+  </div>
+  <div class="success" id="ok">
+    <div class="ok">✓</div><h2 id="okTitle">Submitted</h2>
+    <div class="status">Received · تم الاستلام</div>
+    <p id="okMsg">Thank you. Your submission has been received by SATC Procurement.</p>
+    <p dir="rtl" id="okMsgAr">شكراً لك. تم استلام طلبك بنجاح.</p>
+  </div>
+  <div class="pbody" id="pbody">
+    <div id="viewHome">
+      <div id="chooser">
+        <div class="chooser-q">What would you like to do? &nbsp;·&nbsp; <span dir="rtl">إيه اللي حابب تعمله؟</span></div>
+        <div class="choices">
+          <div class="choice" onclick="showForm('register')">
+            <div class="ic">🏢</div>
+            <div class="t">Register Company</div>
+            <div class="car" dir="rtl">تسجيل شركة</div>
+          </div>
+          <div class="choice" onclick="showForm('item')">
+            <div class="ic">💰</div>
+            <div class="t">Submit Prices</div>
+            <div class="car" dir="rtl">تسجيل أسعار</div>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="backlink" id="backBtn" onclick="backToChooser()" style="display:none">← Back &nbsp;·&nbsp; <span dir="rtl">رجوع للاختيارات</span></button>
+      <form id="formItemized" onsubmit="return submitItemized(event)" style="display:none">
+        <div class="psec"><div class="peb"><span class="num">01</span><h3>Your Company</h3><span class="ar" dir="rtl">بيانات شركتك</span></div>
+          <div class="pgrid">
+            <div class="pf full"><label>Company Name <span class="req">*</span></label><input id="it_company" required placeholder="Registered company name"></div>
+            <div class="pf"><label>Contact Person <span class="req">*</span></label><input id="it_contact" required></div>
+            <div class="pf"><label>Mobile <span class="req">*</span></label><input id="it_mobile" required></div>
+            <div class="pf"><label>Email <span class="req">*</span></label><input id="it_email" type="email" required></div>
+          </div></div>
+        <div class="psec"><div class="peb"><span class="num">02</span><h3>Itemized Request</h3><span class="ar" dir="rtl">طلب تفصيلي</span></div>
+          <div class="ithead"><span>#</span><span>Item Description · الوصف</span><span>Site</span><span class="tr">Qty</span><span class="tr">Unit Price</span><span class="tr">Discount</span><span class="tr">Total</span><span></span></div>
+          <div id="itRows"></div>
+          <button class="qadd" type="button" onclick="addItRow('','JED','')">＋ Add item / إضافة بند</button>
+          <div class="rfqgrand" style="flex-wrap:wrap;gap:8px 30px;">
+            <div style="display:flex;align-items:baseline;gap:8px;"><span class="lbl">Total</span><span class="val" id="itGrand">0.00</span></div>
+          </div>
+        </div>
+        <div class="psec"><div class="pactions"><button class="pbtn" type="submit">Submit pricing / إرسال الأسعار</button></div></div>
+      </form>
+    </div>
+  </div>
+  <footer><b>SATC</b> Procurement Department &nbsp;·&nbsp; <span dir="rtl">إدارة المشتريات — السبق العربي للتجارة والمقاولات</span></footer>
+</div>
+<script>
+var rnd=Math.floor(1000+Math.random()*9000), yr=new Date().getFullYear();
+var IT_REF='SATC-RFQ-'+yr+'-'+rnd;
+document.getElementById('ref').textContent=IT_REF;
+function showForm(f){
+  document.getElementById('chooser').style.display='none';
+  document.getElementById('backBtn').style.display='inline-flex';
+  document.getElementById('formItemized').style.display=f==='item'?'':'none';
+  document.getElementById('pTitle').textContent='Submit Prices';
+  document.getElementById('pTitleAr').textContent='تسجيل أسعار';
+  document.getElementById('ref').textContent=IT_REF;
+  window.scrollTo(0,0);
+}
+function backToChooser(){
+  document.getElementById('chooser').style.display='';
+  document.getElementById('backBtn').style.display='none';
+  document.getElementById('formItemized').style.display='none';
+  document.getElementById('pTitle').textContent='Supplier Portal';
+  document.getElementById('pTitleAr').textContent='بوابة المورّد';
+  window.scrollTo(0,0);
+}
+var IT_PREFILL=[
+  {desc:'Dismantling joint DN300', site:'JED', qty:6},
+  {desc:'Ductile Iron Collar DN300', site:'JED', qty:16}
+];
+function itAttr(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
+function itRenum(){var r=document.querySelectorAll('#itRows .itrow');for(var i=0;i<r.length;i++){r[i].querySelector('.iln').textContent=(i+1);}}
+function addItRow(d,s,q){
+  var row=document.createElement('div'); row.className='itrow';
+  row.innerHTML='<div class="iln"></div><div><input class="idesc" value="'+itAttr(d)+'" placeholder="Item"></div><div><input class="isite" value="'+itAttr(s||'JED')+'"></div><div><input class="iqty" type="number" min="0" step="any" value="'+(q||q===0?String(q):'')+'" oninput="itCalc()"></div><div><input class="iup" inputmode="decimal" placeholder="0.00" oninput="itCalc()"></div><div><input class="idisc" inputmode="decimal" placeholder="0.00" oninput="itCalc()"></div><div class="itot">—</div><div style="text-align:center"><button class="del" type="button">🗑</button></div>';
+  document.getElementById('itRows').appendChild(row);
+  row.querySelector('.del').addEventListener('click',function(){row.parentNode.removeChild(row);itRenum();itCalc();});
+  itRenum();
+}
+function itCalc(){
+  var rows=document.querySelectorAll('#itRows .itrow'), net=0;
+  for(var i=0;i<rows.length;i++){ var q=parseFloat(rows[i].querySelector('.iqty').value)||0, up=parseFloat(rows[i].querySelector('.iup').value)||0, ds=parseFloat(rows[i].querySelector('.idisc').value)||0; var g=q*up, t=g-ds; if(t<0)t=0; net+=t; rows[i].querySelector('.itot').textContent=(up||ds)?t.toFixed(2):'—'; }
+  document.getElementById('itGrand').textContent=net.toFixed(2);
+}
+function submitItemized(ev){
+  ev.preventDefault();
+  var f=document.getElementById('formItemized'); if(!f.checkValidity()){ f.reportValidity(); return false; }
+  alert('Submitted! Thank you.');
+  return false;
+}
+IT_PREFILL.forEach(function(it){ addItRow(it.desc,it.site,it.qty); }); itCalc();
+</script>
+</body>
+</html>
