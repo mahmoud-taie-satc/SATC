@@ -141,18 +141,23 @@ const SUM_FALLBACK={byProject:{"P3A":{req:184038,recv:27166},"Faisalia North":{r
 async function loadSummary(){try{const r=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Summary&_=${Date.now()}`,{cache:'no-store'});const rows=parseCSV(await r.text()).filter(x=>x.length>1);if(rows.length>1){const h=rows[0].map(x=>(x||'').trim().toLowerCase());const kn=findCol(h,['kind']),nm=findCol(h,['project name','name']),rq=findCol(h,['required']),rc=findCol(h,['recveived','received']);const bp={};let tr=0,tc=0,ok=false;for(let i=1;i<rows.length;i++){const row=rows[i];if(((row[kn]||'')+'').toLowerCase().trim()!=='project')continue;const nme=(row[nm]||'').trim();if(!nme)continue;const a=toNum(row[rq]),b=toNum(row[rc]);bp[nme]={req:a,recv:b};tr+=a;tc+=b;ok=true;}if(ok)SUMMARY={byProject:bp,total:{req:tr,recv:tc}};}}catch(e){console.warn('summary',e);}if(!SUMMARY)SUMMARY=SUM_FALLBACK;}
 async function loadMat(force){ if(loading)return; if(MAT&&!force)return; loading=true;
   document.getElementById('mBody').innerHTML='<tr><td colspan="8" style="text-align:center;color:#8ea0c4;padding:30px">… جاري التحميل</td></tr>';
-  const all=[];
-  for(const tab of MAT_TABS){ try{
-    const r=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}&_=${Date.now()}`,{cache:'no-store'});
-    const rows=parseCSV(await r.text()).filter(x=>x.length>1); if(rows.length<2)continue;
-    const h=rows[0].map(x=>(x||'').trim().toLowerCase());
-    const d=findCol(h,['item description','description']),p=findCol(h,['unit price']),qy=findCol(h,['qty required site','required quantity site','qty required']),v=findCol(h,['t.price required site','price required quantity site','price required site']),rc=findCol(h,['qty received','received quantity']),st=findStatus(h),tp=findCol(h,['type']),ipo=findCol(h,['po number']);
-    for(let i=1;i<rows.length;i++){const row=rows[i];const desc=d>=0?(row[d]||'').trim():'';if(!desc)continue;
-      all.push({project:tab,po:ipo>=0?(row[ipo]||'').trim():'',type:tp>=0?(row[tp]||'').trim():'',desc,price:toNum(row[p]),qty:toNum(row[qy]),total:toNum(row[v]),recv:toNum(row[rc]),status:(st>=0?(row[st]||'').trim():'')});}
-  }catch(e){console.warn(tab,e);} }
-  MAT=(all&&all.length)?all:(MAT_FALLBACK||[]);
-  await loadSummary();loading=false;
-  const sel=document.getElementById('pf');if(sel.options.length<=1)MAT_TABS.forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;sel.append(o);});
+  const base=`https://docs.google.com/spreadsheets/d/${REQ_ID}/gviz/tq?tqx=out:csv&sheet=`;
+  let reqRows=[],recvByIdx=[];
+  try{ const r=await fetch(base+'Requests&_='+Date.now(),{cache:'no-store'}); const rows=parseCSV(await r.text()).filter(x=>x.length>1);
+    if(rows.length>1){ const h=rows[0].map(x=>(x||'').trim().toLowerCase());
+      const iP=findCol(h,['project']),iI=findCol(h,['item','description']),iQ=findCol(h,['qty']),iU=findCol(h,['unit price']),iT=findCol(h,['total']),iS=findCol(h,['status']);
+      for(let i=1;i<rows.length;i++){const row=rows[i];const desc=iI>=0?(row[iI]||'').trim():'';if(!desc)continue;
+        reqRows.push({project:iP>=0?(row[iP]||'').trim():'',desc,price:toNum(row[iU]),qty:toNum(row[iQ]),total:toNum(row[iT]),status:iS>=0?(row[iS]||'').trim():''});}
+    }
+  }catch(e){console.warn('mat-req',e);}
+  try{ const r=await fetch(base+'Receipts&_='+Date.now(),{cache:'no-store'}); const rows=parseCSV(await r.text()).filter(x=>x.length>1);
+    if(rows.length>1){ const h=rows[0].map(x=>(x||'').trim().toLowerCase()); const iI=findCol(h,['item','description']),iRecv=findCol(h,['received']);
+      for(let i=1;i<rows.length;i++){const row=rows[i];const desc=iI>=0?(row[iI]||'').trim():'';if(!desc)continue;recvByIdx.push(toNum(row[iRecv]));}
+    }
+  }catch(e){console.warn('mat-rcp',e);}
+  MAT=reqRows.map((m,i)=>({project:m.project,po:'',type:'',desc:m.desc,price:m.price,qty:m.qty,total:m.total,recv:(i<recvByIdx.length?recvByIdx[i]:0),status:m.status}));
+  loading=false;
+  const sel=document.getElementById('pf');if(sel&&sel.options.length<=1){[...new Set(MAT.map(m=>m.project).filter(Boolean))].forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;sel.append(o);});}
   renderMat();
 }
 function renderMat(){ if(!MAT)return;

@@ -234,6 +234,25 @@ async function loadData(){const toNum=window.toNum;
         const C=((row[it]||'').trim().toUpperCase()==='V')?VL:FT;C.req+=vr;C.recv+=vc;C.qty+=vq;}
       projects.push({name:tab,req,po,recv,transit,noto});
     }
+    // ---- fold in Site Requests from Project Manager Portal (requests -> main, not the reverse) ----
+    try{
+      const RID="1VqYekQutOK1dEvF9ADJnT9kjPRRtPQu-";
+      const rbase=`https://docs.google.com/spreadsheets/d/${RID}/gviz/tq?tqx=out:csv&sheet=`;
+      let recvByIdx=[];
+      const rr=await fetch(rbase+'Receipts&_='+Date.now(),{cache:'no-store'});
+      const rrows=parseCSV(await rr.text()).filter(x=>x.length>1);
+      if(rrows.length>1){const h=rrows[0].map(x=>(x||'').trim().toLowerCase());const iI=fc(h,['item','description'],2),iRc=fc(h,['received'],6);
+        for(let i=1;i<rrows.length;i++){if(!(rrows[i][iI]||'').trim())continue;recvByIdx.push(toNum(rrows[i][iRc]));}}
+      const qr=await fetch(rbase+'Requests&_='+Date.now(),{cache:'no-store'});
+      const qrows=parseCSV(await qr.text()).filter(x=>x.length>1);
+      if(qrows.length>1){const h=qrows[0].map(x=>(x||'').trim().toLowerCase());const iP=fc(h,['project'],1),iI=fc(h,['item','description'],2),iU=fc(h,['unit price'],6),iT=fc(h,['total'],7);
+        let k=0;
+        for(let i=1;i<qrows.length;i++){const row=qrows[i];if(!(row[iI]||'').trim())continue;
+          const pname=(row[iP]||'').trim()||'Site Requests';const reqV=toNum(row[iT]);const recvV=toNum(row[iU])*(k<recvByIdx.length?recvByIdx[k]:0);k++;
+          let pj=projects.find(x=>x.name===pname);if(!pj){pj={name:pname,req:0,po:0,recv:0,transit:0,noto:0};projects.push(pj);}
+          pj.req+=reqV;pj.recv+=recvV;}
+      }
+    }catch(e){console.warn('site-requests fold',e);}
     if(projects.length){D={projects,cats:[FT,VL]};setStatus('live');return;}
   }catch(e){console.warn(e);}}
   D=FALLBACK;setStatus('offline');}
