@@ -81,13 +81,19 @@ tr:hover td{background:#101935}
     </div>
   </div>
   <div id="view-sitereq" style="display:none">
+    <div class="kpis">
+      <div class="kpi"><div class="l">إجمالي المطلوب · Total Required</div><div class="v" id="srReq">—</div></div>
+      <div class="kpi"><div class="l">تم استلامه · Received</div><div class="v" id="srRecv">—</div></div>
+      <div class="kpi"><div class="l">المتبقّي · Remaining</div><div class="v" id="srRem">—</div></div>
+      <div class="kpi"><div class="l">لم يُطلب بعد · Not Issued</div><div class="v" id="srNot">—</div></div>
+    </div>
     <div class="card">
       <div class="tools">
-        <h3 style="margin:0;color:#eaf0fb;font-size:16px">📥 طلبات الموقع <span class="muted" style="font-size:12px">— لحظية</span></h3>
+        <h3 style="margin:0;color:#eaf0fb;font-size:16px">📥 طلبات الموقع <span class="muted" style="font-size:12px">— لحظية (مطلوب / مستلم / متبقّي / لم يُطلب)</span></h3>
         <span class="muted" id="srCount" style="margin-inline-start:auto"></span>
       </div>
-      <div class="scroll"><table><thead><tr><th>التاريخ</th><th>المشروع</th><th>الصنف</th><th class="num">الكمية</th><th>المستودع</th><th class="num">سعر الوحدة</th><th class="num">الإجمالي</th><th>مقدّم الطلب</th><th>الحالة</th><th>ملاحظات</th></tr></thead><tbody id="srBody"><tr><td colspan="10" style="text-align:center;color:#8ea0c4;padding:30px">… جاري التحميل</td></tr></tbody></table></div>
-      <p class="muted" style="font-size:12px;margin-top:10px">🟢 بيتحدّث تلقائياً كل 30 ثانية — أي طلب جديد من الموقع يظهر هنا لوحده من غير ما تعمل تحديث.</p>
+      <div class="scroll"><table><thead><tr><th>التاريخ</th><th>المشروع</th><th>الصنف</th><th>الوحدة</th><th class="num">مطلوب</th><th class="num">تم طلبه</th><th class="num">استُلم</th><th class="num">متبقّي</th><th class="num">لم يُطلب</th></tr></thead><tbody id="srBody"><tr><td colspan="9" style="text-align:center;color:#8ea0c4;padding:30px">… جاري التحميل</td></tr></tbody></table></div>
+      <p class="muted" style="font-size:12px;margin-top:10px">🟢 بيتحدّث تلقائياً كل 30 ثانية — أول ما المدير يسجّل طلب أو المخزن يحدّث الاستلام، يظهر هنا لوحده.</p>
     </div>
   </div>
   <div id="view-req" style="display:none">
@@ -115,7 +121,7 @@ tr:hover td{background:#101935}
 <script>
 /* ===== CONFIG ===== */
 const SHEET_ID="1wt144VinDfHl-kmzybo1lIJNUltFSjb3C1c5it_oWtM";          // main data sheet (read materials)
-const REQUESTS_URL="https://docs.google.com/spreadsheets/d/1VqYekQutOK1dEvF9ADJnT9kjPRRtPQu-/edit#gid=766635321";   // separate requests sheet
+const REQUESTS_URL="https://docs.google.com/spreadsheets/d/1VqYekQutOK1dEvF9ADJnT9kjPRRtPQu-/edit#gid=105799164";   // Requests tab (data entry)
 const RFQ_URL="https://docs.google.com/spreadsheets/d/1igkP4r02pTZAZgr8UNqaYdCYPrU1G94I/edit";
 const CMP_URL="https://docs.google.com/spreadsheets/d/1mCIz69PQwI2UuPYFek7c1uls5nscFBoL/edit#gid=1720977814";
 const CMP_ID="1mCIz69PQwI2UuPYFek7c1uls5nscFBoL";
@@ -211,11 +217,11 @@ async function genPPTX(){
 }
 let REQS=null,reqLoading=false;
 async function loadRequests(){ if(reqLoading)return; reqLoading=true;
-  try{ const r=await fetch(`https://docs.google.com/spreadsheets/d/${REQ_ID}/gviz/tq?tqx=out:csv&sheet=Requests&_=${Date.now()}`,{cache:'no-store'});
+  try{ const r=await fetch(`https://docs.google.com/spreadsheets/d/${REQ_ID}/gviz/tq?tqx=out:csv&sheet=Receipts&_=${Date.now()}`,{cache:'no-store'});
     if(r.ok){ const rows=parseCSV(await r.text()).filter(x=>x.length>1); const out=[];
       if(rows.length>1){ const h=rows[0].map(x=>(x||'').trim().toLowerCase()); const c=(subs,fb)=>{for(let i=0;i<h.length;i++)for(const s of subs)if((h[i]||'').includes(s))return i;return fb;};
-        const iD=c(['date'],0),iP=c(['project'],1),iI=c(['item','description'],2),iQ=c(['qty'],3),iW=c(['warehouse'],4),iU=c(['unit price'],5),iT=c(['total'],6),iB=c(['requested by'],7),iS=c(['status'],8),iN=c(['notes'],9);
-        for(let i=1;i<rows.length;i++){const row=rows[i]; const item=(row[iI]||'').trim(); if(!item)continue; out.push({d:row[iD]||'',p:row[iP]||'',item,qty:row[iQ]||'',wh:row[iW]||'',unit:row[iU]||'',tot:row[iT]||'',by:row[iB]||'',st:row[iS]||'',note:row[iN]||''});}
+        const iD=c(['date'],0),iP=c(['project'],1),iI=c(['item','description'],2),iU=c(['unit'],3),iReq=c(['required'],4),iPo=c(['qty po','po'],5),iRecv=c(['received'],6),iRem=c(['remaining'],7),iNot=c(['not issued','not'],8);
+        for(let i=1;i<rows.length;i++){const row=rows[i]; const item=(row[iI]||'').trim(); if(!item)continue; out.push({d:row[iD]||'',p:row[iP]||'',item,unit:row[iU]||'',req:row[iReq]||'',po:row[iPo]||'',recv:row[iRecv]||'',rem:row[iRem]||'',noti:row[iNot]||''});}
       }
       REQS=out;
     }
@@ -223,8 +229,13 @@ async function loadRequests(){ if(reqLoading)return; reqLoading=true;
   reqLoading=false; renderRequests();
 }
 function renderRequests(){ const body=document.getElementById('srBody'); if(!body||!REQS)return;
-  const cn=document.getElementById('srCount'); if(cn)cn.textContent=REQS.length+' طلب';
-  body.innerHTML=REQS.length? REQS.map(x=>`<tr><td>${esc(x.d)}</td><td><b>${esc(x.p)}</b></td><td style="text-align:right">${esc(x.item)}</td><td class="num">${esc(x.qty)}</td><td>${esc(x.wh)}</td><td class="num">${esc(x.unit)}</td><td class="num">${esc(x.tot)}</td><td>${esc(x.by)}</td><td>${esc(x.st)}</td><td>${esc(x.note)}</td></tr>`).join('') : '<tr><td colspan="10" style="text-align:center;color:#8ea0c4;padding:26px">مفيش طلبات لسه — أول ما الموقع يسجّل طلب هيظهر هنا تلقائياً 🟢</td></tr>';
+  const cn=document.getElementById('srCount'); if(cn)cn.textContent=REQS.length+' بند';
+  const nq=x=>{if(x==null||String(x).trim()==='')return '';const v=toNum(x);return Number.isInteger(v)?v.toLocaleString('en-US'):v.toLocaleString('en-US',{maximumFractionDigits:2});};
+  let tReq=0,tRecv=0,tRem=0,tNot=0;
+  REQS.forEach(x=>{tReq+=toNum(x.req);tRecv+=toNum(x.recv);tRem+=toNum(x.rem);tNot+=toNum(x.noti);});
+  const setk=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=n(v);};
+  setk('srReq',tReq);setk('srRecv',tRecv);setk('srRem',tRem);setk('srNot',tNot);
+  body.innerHTML=REQS.length? REQS.map(x=>`<tr><td>${esc(x.d)}</td><td><b>${esc(x.p)}</b></td><td style="text-align:right">${esc(x.item)}</td><td>${esc(x.unit)}</td><td class="num">${nq(x.req)}</td><td class="num">${nq(x.po)}</td><td class="num">${nq(x.recv)}</td><td class="num">${nq(x.rem)}</td><td class="num">${nq(x.noti)}</td></tr>`).join('') : '<tr><td colspan="9" style="text-align:center;color:#8ea0c4;padding:26px">مفيش طلبات لسه — أول ما الموقع يسجّل طلب هيظهر هنا تلقائياً 🟢</td></tr>';
 }
 let _autoN=0;
 function autoRefresh(){ _autoN++; loadRequests(); if(_autoN%4===0)loadMat(true); const d=document.getElementById('liveDot'); if(d)d.textContent='🟢 '+new Date().toLocaleTimeString('en-GB').slice(0,5); }
