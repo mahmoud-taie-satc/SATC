@@ -152,7 +152,8 @@ body{background:radial-gradient(1200px 600px at 70% -10%,#16203a 0%,var(--bg) 55
       <div class="card" style="margin-top:16px">
         <div class="ph"><h3>📋 تقارير تفصيلية &nbsp;<span class="muted" style="font-size:12px">Detailed Item Reports</span></h3></div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
-          <button class="btn gold" id="rbND" onclick="detailReport('nd')">📥 مواد لم يتم توريدها</button>
+          <button class="btn gold" id="rbD" onclick="detailReport('d')">📦 مواد تم توريدها</button>
+          <button class="btn gold" id="rbND" onclick="detailReport('nd')">🚚 المواد المنتظر توريدها</button>
           <button class="btn gold" id="rbNO" onclick="detailReport('no')">🛒 مواد لم يتم طلبها</button>
           <select id="rProj" onchange="renderDetail()" style="background:#0f1426;border:1px solid #1e2a44;color:#e6edf7;border-radius:8px;padding:8px 10px;font-size:13px"><option value="">كل المشاريع</option></select>
           <span id="rInfo" class="muted" style="font-size:12px"></span>
@@ -163,7 +164,7 @@ body{background:radial-gradient(1200px 600px at 70% -10%,#16203a 0%,var(--bg) 55
         <div style="max-height:55vh;overflow:auto">
         <table class="tbl"><thead><tr><th>المشروع</th><th>الصنف</th><th>الكمية</th><th>سعر الوحدة</th><th>القيمة (SAR)</th></tr></thead><tbody id="rBody"><tr><td colspan="5" style="text-align:center;color:#8b97ad;padding:24px">اختار نوع التقرير من فوق 👆</td></tr></tbody></table>
         </div>
-        <p class="muted" style="font-size:12px;margin-top:12px">📥 <b>لم يتم توريدها</b> = اتطلبت ولسه في الطريق (متبقّي) · 🛒 <b>لم يتم طلبها</b> = لسه ماتعملّهاش أمر شراء. نزّلهم <b>Excel</b> أو <b>PDF</b>.</p>
+        <p class="muted" style="font-size:12px;margin-top:12px">📦 <b>تم توريدها</b> = وصلت واستُلمت فعلاً · 🚚 <b>المنتظر توريدها</b> = اتطلبت ولسه في الطريق (متبقّي) · 🛒 <b>لم يتم طلبها</b> = لسه ماتعملّهاش أمر شراء. نزّلهم <b>Excel</b> أو <b>PDF</b>.</p>
       </div>
     </section>
 
@@ -219,19 +220,19 @@ const PTABS=["P3A","Faisalia North","Faisalia South","GRC1","North Obhor"];
 function fc(h,subs,fb){for(let i=0;i<h.length;i++)for(const s of subs)if((h[i]||'').includes(s))return i;return fb;}
 async function loadData(){const toNum=window.toNum;
   if(SHEET_ID){try{
-    const projects=[],FT={name:'قطع / Fittings',req:0,recv:0,qty:0},VL={name:'صمامات / Valves',req:0,recv:0,qty:0};LINEITEMS=[];
+    const projects=[],FT={name:'قطع / Fittings',req:0,recv:0,qty:0},VL={name:'صمامات / Valves',req:0,recv:0,qty:0},PP={name:'مواسير / Pipes',req:0,recv:0,qty:0};LINEITEMS=[];
     for(const tab of PTABS){
       const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}&_=${Date.now()}`;
       const r=await fetch(url,{cache:'no-store'});const rows=parseCSV(await r.text()).filter(x=>x.length>1);
       if(rows.length<2)throw new Error('empty '+tab);
       const h=rows[0].map(x=>(x||'').trim().toLowerCase());
-      const it=fc(h,['type'],0),idd=fc(h,['item description','description'],6),iq=fc(h,['qty required site'],8),ir=fc(h,['t.price required site'],13),ip=fc(h,['required po'],14),irc=fc(h,['t.price received'],15),itr=fc(h,['t.price remaining'],16),ino=fc(h,['t.price not issued'],17),iu=fc(h,['unit price'],7),iqr=fc(h,['qty remaining'],11),iqn=fc(h,['qty not issued'],12);
+      const it=fc(h,['type'],0),idd=fc(h,['item description','description'],6),iq=fc(h,['qty required site'],8),ir=fc(h,['t.price required site'],13),ip=fc(h,['required po'],14),irc=fc(h,['t.price received'],15),itr=fc(h,['t.price remaining'],16),ino=fc(h,['t.price not issued'],17),iu=fc(h,['unit price'],7),iqr=fc(h,['qty remaining'],11),iqn=fc(h,['qty not issued'],12),iqc=fc(h,['qty received'],10);
       let req=0,po=0,recv=0,transit=0,noto=0;
       for(let i=1;i<rows.length;i++){const row=rows[i];if(!(row[idd]||'').trim())continue;
         const vr=toNum(row[ir]),vp=toNum(row[ip]),vc=toNum(row[irc]),vt=toNum(row[itr]),vn=toNum(row[ino]),vq=toNum(row[iq]);
         req+=vr;po+=vp;recv+=vc;transit+=vt;noto+=vn;
-        const qr=toNum(row[iqr]),qn=toNum(row[iqn]);if(qr>0||qn>0)LINEITEMS.push({p:tab,d:(row[idd]||'').trim(),u:toNum(row[iu]),qr,vr:vt,qn,vn});
-        const C=((row[it]||'').trim().toUpperCase()==='V')?VL:FT;C.req+=vr;C.recv+=vc;C.qty+=vq;}
+        const qr=toNum(row[iqr]),qn=toNum(row[iqn]),rc=toNum(row[iqc]);if(qr>0||qn>0||rc>0)LINEITEMS.push({p:tab,d:(row[idd]||'').trim(),u:toNum(row[iu]),qr,vr:vt,qn,vn,rc,vc});
+        const typ=(row[it]||'').trim().toUpperCase(),isPipe=/pipe/i.test(row[idd]||'');const C=typ==='V'?VL:(isPipe?PP:FT);C.req+=vr;C.recv+=vc;C.qty+=vq;}
       projects.push({name:tab,req,po,recv,transit,noto});
     }
     // ---- fold in Site Requests from Project Manager Portal (requests -> main, not the reverse) ----
@@ -253,7 +254,7 @@ async function loadData(){const toNum=window.toNum;
           pj.req+=reqV;pj.recv+=recvV;}
       }
     }catch(e){console.warn('site-requests fold',e);}
-    if(projects.length){D={projects,cats:[FT,VL]};setStatus('live');return;}
+    if(projects.length){D={projects,cats:[FT,VL,PP]};setStatus('live');return;}
   }catch(e){console.warn(e);}}
   D=FALLBACK;setStatus('offline');}
 function sparkSVG(values,color){const w=210,h=46,max=Math.max(...values),min=Math.min(...values),rng=(max-min)||1;
@@ -377,10 +378,10 @@ function genPPTX(){
 function renderAll(){renderKPI();renderArea();doDonut(document.getElementById('donut'),document.getElementById('legend'));renderTop();renderCatPerf();bars(document.getElementById('barChart'),false);renderProjects();renderCategories();renderReports();}
 let CUR_REP=null;
 function detailReport(type){CUR_REP={type};const sel=document.getElementById('rProj');if(sel.options.length<=1){[...new Set(LINEITEMS.map(m=>m.p))].forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;sel.append(o);});}
-  document.getElementById('rbND').style.opacity=type=='nd'?'1':'.55';document.getElementById('rbNO').style.opacity=type=='no'?'1':'.55';renderDetail();}
-function detailRows(){if(!CUR_REP)return[];const pf=document.getElementById('rProj').value;let items=CUR_REP.type=='nd'?LINEITEMS.filter(m=>m.qr>0).map(m=>({p:m.p,d:m.d,q:m.qr,u:m.u,v:m.vr})):LINEITEMS.filter(m=>m.qn>0).map(m=>({p:m.p,d:m.d,q:m.qn,u:m.u,v:m.vn}));if(pf)items=items.filter(x=>x.p===pf);return items;}
+  document.getElementById('rbD').style.opacity=type=='d'?'1':'.55';document.getElementById('rbND').style.opacity=type=='nd'?'1':'.55';document.getElementById('rbNO').style.opacity=type=='no'?'1':'.55';renderDetail();}
+function detailRows(){if(!CUR_REP)return[];const pf=document.getElementById('rProj').value;let items;if(CUR_REP.type=='d')items=LINEITEMS.filter(m=>m.rc>0).map(m=>({p:m.p,d:m.d,q:m.rc,u:m.u,v:m.vc}));else if(CUR_REP.type=='nd')items=LINEITEMS.filter(m=>m.qr>0).map(m=>({p:m.p,d:m.d,q:m.qr,u:m.u,v:m.vr}));else items=LINEITEMS.filter(m=>m.qn>0).map(m=>({p:m.p,d:m.d,q:m.qn,u:m.u,v:m.vn}));if(pf)items=items.filter(x=>x.p===pf);return items;}
 function renderDetail(){if(!CUR_REP)return;const rows=detailRows();const tot=rows.reduce((s,x)=>s+(+x.v||0),0);
-  CUR_REP.title=CUR_REP.type=='nd'?'مواد لم يتم توريدها':'مواد لم يتم طلبها';CUR_REP.file=CUR_REP.type=='nd'?'Not_Delivered':'Not_Ordered';
+  CUR_REP.title=CUR_REP.type=='d'?'مواد تم توريدها':CUR_REP.type=='nd'?'المواد المنتظر توريدها':'مواد لم يتم طلبها';CUR_REP.file=CUR_REP.type=='d'?'Delivered':CUR_REP.type=='nd'?'Awaiting_Delivery':'Not_Ordered';
   document.getElementById('rInfo').textContent=rows.length+' صنف · SAR '+n(tot);
   const show=rows.length?'':'none';document.getElementById('rExcel').style.display=show;document.getElementById('rPdf').style.display=show;
   document.getElementById('rBody').innerHTML=rows.length?rows.map(x=>`<tr><td><b>${esc(x.p)}</b></td><td style="text-align:left">${esc(x.d)}</td><td>${n(x.q)}</td><td>${n(x.u)}</td><td>${n(x.v)}</td></tr>`).join('')+`<tr style="background:#16203f;font-weight:700"><td colspan="4">الإجمالي / Total</td><td>${n(tot)}</td></tr>`:'<tr><td colspan="5" style="text-align:center;color:#8b97ad;padding:24px">'+(LINEITEMS.length?'لا توجد أصناف في التقرير ده':'⏳ البيانات بتتحمّل من اللينك المنشور (مش متاحة في المعاينة المحلية)')+'</td></tr>';}
