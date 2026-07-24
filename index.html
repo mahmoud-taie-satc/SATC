@@ -232,7 +232,7 @@ async function loadData(){const toNum=window.toNum;
         const vr=toNum(row[ir]),vp=toNum(row[ip]),vc=toNum(row[irc]),vt=toNum(row[itr]),vn=toNum(row[ino]),vq=toNum(row[iq]);
         req+=vr;po+=vp;recv+=vc;transit+=vt;noto+=vn;
         const qr=toNum(row[iqr]),qn=toNum(row[iqn]),rc=toNum(row[iqc]);if(qr>0||qn>0||rc>0)LINEITEMS.push({p:tab,d:(row[idd]||'').trim(),u:toNum(row[iu]),qr,vr:vt,qn,vn,rc,vc});
-        const typ=(row[it]||'').trim().toUpperCase(),isPipe=/pipe/i.test(row[idd]||'');const C=typ==='V'?VL:(isPipe?PP:FT);C.req+=vr;C.recv+=vc;C.qty+=vq;}
+        const typ=(row[it]||'').trim().toUpperCase();const C=typ==='V'?VL:(typ==='P'?PP:FT);C.req+=vr;C.recv+=vc;C.qty+=vq;}
       projects.push({name:tab,req,po,recv,transit,noto});
     }
     // ---- fold in Site Requests from Project Manager Portal (requests -> main, not the reverse) ----
