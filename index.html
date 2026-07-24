@@ -175,7 +175,7 @@ body{background:radial-gradient(1200px 600px at 70% -10%,#16203a 0%,var(--bg) 55
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <script>
 /* ===== Google Sheet — تحديث لحظي ===== */
-const SHEET_ID  = "1wt144VinDfHl-kmzybo1lIJNUltFSjb3C1c5it_oWtM";
+const SHEET_ID  = "1viBaj4LGyUkJxuWDsmZEcgACoS-heC4b";
 const SHEET_TAB = "Summary";
 const POLL_SEC  = 30;
 const SHEET_EDIT = "https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/edit";
@@ -226,7 +226,7 @@ async function loadData(){const toNum=window.toNum;
       const r=await fetch(url,{cache:'no-store'});const rows=parseCSV(await r.text()).filter(x=>x.length>1);
       if(rows.length<2)throw new Error('empty '+tab);
       const h=rows[0].map(x=>(x||'').trim().toLowerCase());
-      const it=fc(h,['type'],0),idd=fc(h,['item description','description'],6),iq=fc(h,['qty required site'],8),ir=fc(h,['t.price required site'],13),ip=fc(h,['required po'],14),irc=fc(h,['t.price received'],15),itr=fc(h,['t.price remaining'],16),ino=fc(h,['t.price not issued'],17),iu=fc(h,['unit price'],7),iqr=fc(h,['qty remaining'],11),iqn=fc(h,['qty not issued'],12),iqc=fc(h,['qty received'],10);
+      const it=fc(h,['type'],0),idd=fc(h,['item description','description'],6),iq=fc(h,['qty required site'],8),ir=fc(h,['t.price required site','val required site'],13),ip=fc(h,['required po'],14),irc=fc(h,['t.price received','val received'],15),itr=fc(h,['t.price remaining','val remaining'],16),ino=fc(h,['t.price not issued','val not issued'],17),iu=fc(h,['unit price'],7),iqr=fc(h,['qty remaining'],11),iqn=fc(h,['qty not issued'],12),iqc=fc(h,['qty received'],10);
       let req=0,po=0,recv=0,transit=0,noto=0;
       for(let i=1;i<rows.length;i++){const row=rows[i];if(!(row[idd]||'').trim())continue;
         const vr=toNum(row[ir]),vp=toNum(row[ip]),vc=toNum(row[irc]),vt=toNum(row[itr]),vn=toNum(row[ino]),vq=toNum(row[iq]);
