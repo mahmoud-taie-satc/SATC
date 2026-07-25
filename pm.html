@@ -98,9 +98,14 @@ tr:hover td{background:#101935}
   document.getElementById('gbtn').addEventListener('click',tryLogin);
   document.getElementById('gpass').addEventListener('keydown',function(e){if(e.key==='Enter')tryLogin();});
   document.getElementById('gpass').addEventListener('input',function(){this.classList.remove('err');document.getElementById('gerr').textContent='';});
-  document.getElementById('gpass').addEventListener('focus',function(){
+  var soundPlayed=false;
+  function playLoginSound(){
+    if(soundPlayed)return; soundPlayed=true;
     var snd=document.getElementById('loginSound');
-    try{ snd.currentTime=0; snd.play().catch(function(){}); }catch(e){}
+    try{ snd.currentTime=0; var p=snd.play(); if(p&&p.catch)p.catch(function(){soundPlayed=false;}); }catch(e){soundPlayed=false;}
+  }
+  ['mousedown','touchstart','focus','keydown'].forEach(function(ev){
+    document.getElementById('gpass').addEventListener(ev,playLoginSound);
   });
   document.addEventListener('DOMContentLoaded',function(){
     try{ if(localStorage.getItem(KEY)==='1') unlock(); }catch(e){}
