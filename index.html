@@ -121,7 +121,8 @@ body{background:radial-gradient(1200px 600px at 70% -10%,#16203a 0%,var(--bg) 55
 <script>
 (function(){
   var PASS="SATC@2026";
-  var KEY="satc_dash_auth";
+  var SESSION_VERSION="v1";
+  var KEY="satc_dash_auth_"+SESSION_VERSION;
   function unlock(){
     document.getElementById('gate').classList.add('hidden');
     var app=document.getElementById('dashApp'); if(app)app.style.display='flex';
