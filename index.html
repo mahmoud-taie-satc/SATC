@@ -233,6 +233,27 @@ body{background:radial-gradient(1200px 600px at 70% -10%,#16203a 0%,var(--bg) 55
       </div>
     </section>
 
+    <section class="view" id="view-other">
+      <div class="card">
+        <div class="ph"><h3>Other — Projects &nbsp;<span class="muted" style="font-size:12px">تفاصيل المشاريع</span></h3><div class="sel">All values in SAR</div></div>
+        <table class="tbl"><thead><tr><th>Project / المشروع</th><th>Required</th><th>PO</th><th>Received</th><th>In-Transit</th><th>Not-Ordered</th><th>% Received</th></tr></thead><tbody id="oProjTable"></tbody></table>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="ph"><h3>📋 أصناف أخرى &nbsp;<span class="muted" style="font-size:12px">Other Items</span></h3></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+          <select id="oProj" onchange="renderOther()" style="background:#0f1426;border:1px solid #1e2a44;color:#e6edf7;border-radius:8px;padding:8px 10px;font-size:13px"><option value="">كل المشاريع</option></select>
+          <span id="oInfo" class="muted" style="font-size:12px"></span>
+          <span style="margin-inline-start:auto"></span>
+          <button class="btn" id="oExcel" onclick="exportOther('csv')" style="display:none">⬇ Excel</button>
+          <button class="btn" id="oPdf" onclick="exportOther('pdf')" style="display:none">⬇ PDF</button>
+        </div>
+        <div style="max-height:65vh;overflow:auto">
+        <table class="tbl"><thead><tr><th>المشروع</th><th>الصنف</th><th>الكمية</th><th>سعر الوحدة</th><th>القيمة (SAR)</th></tr></thead><tbody id="oBody"><tr><td colspan="5" style="text-align:center;color:#8b97ad;padding:24px">⏳ البيانات بتتحمّل...</td></tr></tbody></table>
+        </div>
+        <p class="muted" style="font-size:12px;margin-top:12px">📋 أصناف مش مواسير ولا قطع ولا صمامات (زي الأسفلت والأغطية وغيرها) — مش داخلة في أرقام Overview أو Categories، وليها تقريرها المستقل ده مع Excel/PDF زي باقي التقارير.</p>
+      </div>
+    </section>
+
     <div class="sig"><span class="ln"></span><span class="satc"><b>SATC</b><i>ساتك</i></span><span class="ln"></span></div>
   </main>
 </div>
@@ -257,7 +278,7 @@ const PCOLORS=['#3b82f6','#8b5cf6','#06b6d4','#22c55e','#f59e0b'];
 const PIC=['\u{1F4E6}','\u{1F3D7}','\u{1F3ED}','\u{1F9F1}','\u{1F30A}'];
 const CCOLORS=['#6366f1','#f43f5e','#22c55e','#f59e0b'];
 const NS='http://www.w3.org/2000/svg';
-let D = FALLBACK, LINEITEMS=[];
+let D = FALLBACK, LINEITEMS=[], OTHERITEMS=[], OTHERPROJECTS=[];
 const n=x=>Math.round(+x||0).toLocaleString('en-US');
 window.toNum=x=>Number(String(x==null?'':x).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/٫/g,'.').replace(/[^\d.\-]/g,''))||0;
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -285,20 +306,30 @@ const PTABS=["P3A","Faisalia North","Faisalia South","GRC1","North Obhor"];
 function fc(h,subs,fb){for(let i=0;i<h.length;i++)for(const s of subs)if((h[i]||'').includes(s))return i;return fb;}
 async function loadData(){const toNum=window.toNum;
   if(SHEET_ID){try{
-    const projects=[],FT={name:'قطع / Fittings',req:0,recv:0,qty:0},VL={name:'صمامات / Valves',req:0,recv:0,qty:0},PP={name:'مواسير / Pipes',req:0,recv:0,qty:0};LINEITEMS=[];
+    const projects=[],FT={name:'قطع / Fittings',req:0,recv:0,qty:0},VL={name:'صمامات / Valves',req:0,recv:0,qty:0},PP={name:'مواسير / Pipes',req:0,recv:0,qty:0};LINEITEMS=[];OTHERITEMS=[];OTHERPROJECTS=[];
     for(const tab of PTABS){
       const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}&_=${Date.now()}`;
       const r=await fetch(url,{cache:'no-store'});const rows=parseCSV(await r.text()).filter(x=>x.length>1);
       if(rows.length<2)throw new Error('empty '+tab);
       const h=rows[0].map(x=>(x||'').trim().toLowerCase());
       const it=fc(h,['type'],0),idd=fc(h,['item description','description'],6),iq=fc(h,['qty required site'],8),ir=fc(h,['t.price required site','val required site'],13),ip=fc(h,['required po'],14),irc=fc(h,['t.price received','val received'],15),itr=fc(h,['t.price remaining','val remaining'],16),ino=fc(h,['t.price not issued','val not issued'],17),iu=fc(h,['unit price'],7),iqr=fc(h,['qty remaining'],11),iqn=fc(h,['qty not issued'],12),iqc=fc(h,['qty received'],10);
-      let req=0,po=0,recv=0,transit=0,noto=0;
+      let req=0,po=0,recv=0,transit=0,noto=0,oreq=0,opo=0,orecv=0,otransit=0,onoto=0;
       for(let i=1;i<rows.length;i++){const row=rows[i];if(!(row[idd]||'').trim())continue;
         const vr=toNum(row[ir]),vp=toNum(row[ip]),vc=toNum(row[irc]),vt=toNum(row[itr]),vn=toNum(row[ino]),vq=toNum(row[iq]);
-        req+=vr;po+=vp;recv+=vc;transit+=vt;noto+=vn;
-        const qr=toNum(row[iqr]),qn=toNum(row[iqn]),rc=toNum(row[iqc]);if(qr>0||qn>0||rc>0)LINEITEMS.push({p:tab,d:(row[idd]||'').trim(),u:toNum(row[iu]),qr,vr:vt,qn,vn,rc,vc});
-        const typ=(row[it]||'').trim().toUpperCase();const C=typ==='V'?VL:(typ==='P'?PP:FT);C.req+=vr;C.recv+=vc;C.qty+=vq;}
+        const typ=(row[it]||'').trim().toUpperCase();
+        if(typ==='V'||typ==='P'||typ==='F'){
+          req+=vr;po+=vp;recv+=vc;transit+=vt;noto+=vn;
+          const qr=toNum(row[iqr]),qn=toNum(row[iqn]),rc=toNum(row[iqc]);if(qr>0||qn>0||rc>0)LINEITEMS.push({p:tab,d:(row[idd]||'').trim(),u:toNum(row[iu]),qr,vr:vt,qn,vn,rc,vc});
+          if(typ==='V'){VL.req+=vr;VL.recv+=vc;VL.qty+=vq;}
+          else if(typ==='P'){PP.req+=vr;PP.recv+=vc;PP.qty+=vq;}
+          else{FT.req+=vr;FT.recv+=vc;FT.qty+=vq;}
+        } else if((row[idd]||'').trim()){
+          oreq+=vr;opo+=vp;orecv+=vc;otransit+=vt;onoto+=vn;
+          OTHERITEMS.push({p:tab,d:(row[idd]||'').trim(),q:vq,u:toNum(row[iu]),v:vr});
+        }
+      }
       projects.push({name:tab,req,po,recv,transit,noto});
+      OTHERPROJECTS.push({name:tab,req:oreq,po:opo,recv:orecv,transit:otransit,noto:onoto});
     }
     // ---- fold in Site Requests from Project Manager Portal (requests -> main, not the reverse) ----
     try{
@@ -440,7 +471,7 @@ function genPPTX(){
   try{ buildDeck(D,kpi()).writeFile({fileName:'SATC Supply Report - '+new Date().toISOString().slice(0,10)+'.pptx'}); }
   catch(e){ console.error(e); alert('خطأ في توليد التقرير: '+(e&&e.message||e)); }
 }
-function renderAll(){renderKPI();renderArea();doDonut(document.getElementById('donut'),document.getElementById('legend'));renderTop();renderCatPerf();bars(document.getElementById('barChart'),false);renderProjects();renderCategories();renderReports();}
+function renderAll(){renderKPI();renderArea();doDonut(document.getElementById('donut'),document.getElementById('legend'));renderTop();renderCatPerf();bars(document.getElementById('barChart'),false);renderProjects();renderCategories();renderReports();renderOther();}
 let CUR_REP=null;
 function detailReport(type){CUR_REP={type};const sel=document.getElementById('rProj');if(sel.options.length<=1){[...new Set(LINEITEMS.map(m=>m.p))].forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;sel.append(o);});}
   document.getElementById('rbD').style.opacity=type=='d'?'1':'.55';document.getElementById('rbND').style.opacity=type=='nd'?'1':'.55';document.getElementById('rbNO').style.opacity=type=='no'?'1':'.55';renderDetail();}
@@ -454,7 +485,20 @@ function exportDetail(fmt){if(!CUR_REP)return;const rows=detailRows();if(!rows.l
   if(fmt=='csv'){const q=s=>{s=String(s==null?'':s);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};const L=['Project,Item Description,Qty,Unit Price,Value (SAR)'];rows.forEach(x=>L.push([q(x.p),q(x.d),Math.round(x.q),Math.round(x.u),Math.round(x.v)].join(',')));L.push(',,,TOTAL,'+Math.round(tot));const b=new Blob(['\uFEFF'+L.join('\r\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=CUR_REP.file+'.csv';a.click();}
   else{var w=window.open('','_blank');var rh='';rows.forEach(function(x){rh+='<tr><td>'+esc(x.p)+'</td><td>'+esc(x.d)+'</td><td class=r>'+n(x.q)+'</td><td class=r>'+n(x.u)+'</td><td class=r>'+n(x.v)+'</td></tr>';});var css='body{font-family:Segoe UI,Tahoma,Arial;padding:24px;color:#1a2238}h2{color:#16294a;margin:0 0 4px}.s{color:#b8901e;font-weight:700;margin-bottom:14px}table{width:100%;border-collapse:collapse;font-size:12.5px}th{background:#16294a;color:#fff;padding:8px;text-align:right}td{padding:6px 8px;border-bottom:1px solid #e3e3e3}.r{text-align:right}tbody tr:last-child td{font-weight:700;background:#f6f1dd}';var doc='<!doctype html><html dir=rtl><head><meta charset=utf-8><title>'+esc(CUR_REP.title)+'</title><style>'+css+'</style></head><body><h2>SATC - '+esc(CUR_REP.title)+'</h2><div class=s>'+rows.length+' items - SAR '+n(tot)+'</div><table><thead><tr><th>المشروع</th><th>الصنف</th><th>الكمية</th><th>سعر الوحدة</th><th>القيمة</th></tr></thead><tbody>'+rh+'<tr><td colspan=4>الإجمالي / Total</td><td class=r>'+n(tot)+'</td></tr></tbody></table></body></html>';w.document.write(doc);w.document.close();setTimeout(function(){try{w.focus();w.print();}catch(e){}},350);}}
 
-const VIEWS=[{id:'overview',label:'Overview',title:'Dashboard Overview'},{id:'projects',label:'Projects',title:'Projects'},{id:'categories',label:'Categories',title:'Categories'},{id:'reports',label:'Reports',title:'Reports'}];
+function renderOtherProjects(){const tot={req:sum(OTHERPROJECTS,'req'),po:sum(OTHERPROJECTS,'po'),recv:sum(OTHERPROJECTS,'recv'),transit:sum(OTHERPROJECTS,'transit'),noto:sum(OTHERPROJECTS,'noto')};
+  let html=OTHERPROJECTS.map((p,i)=>{const pct=(+p.req?(+p.recv/+p.req*100):0);return `<tr><td><b>${p.name}</b></td><td>${n(p.req)}</td><td>${n(p.po)}</td><td>${n(p.recv)}</td><td>${n(p.transit)}</td><td>${n(p.noto)}</td><td>${pct.toFixed(1)}%<div class="pb"><i style="width:${Math.min(pct,100)}%;background:${PCOLORS[i%PCOLORS.length]}"></i></div></td></tr>`;}).join('');
+  html+=`<tr class="total"><td>الإجمالي / Total</td><td>${n(tot.req)}</td><td>${n(tot.po)}</td><td>${n(tot.recv)}</td><td>${n(tot.transit)}</td><td>${n(tot.noto)}</td><td>${(tot.req?tot.recv/tot.req*100:0).toFixed(1)}%</td></tr>`;
+  document.getElementById('oProjTable').innerHTML=html;}
+function renderOther(){renderOtherProjects();const sel=document.getElementById('oProj');if(sel.options.length<=1){[...new Set(OTHERITEMS.map(m=>m.p))].forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;sel.append(o);});}
+  const pf=sel.value;let rows=OTHERITEMS.slice();if(pf)rows=rows.filter(x=>x.p===pf);const tot=rows.reduce((s,x)=>s+(+x.v||0),0);
+  document.getElementById('oInfo').textContent=rows.length+' صنف · SAR '+n(tot);
+  const show=rows.length?'':'none';document.getElementById('oExcel').style.display=show;document.getElementById('oPdf').style.display=show;
+  document.getElementById('oBody').innerHTML=rows.length?rows.map(x=>`<tr><td><b>${esc(x.p)}</b></td><td style="text-align:left">${esc(x.d)}</td><td>${n(x.q)}</td><td>${n(x.u)}</td><td>${n(x.v)}</td></tr>`).join('')+`<tr style="background:#16203f;font-weight:700"><td colspan="4">الإجمالي / Total</td><td>${n(tot)}</td></tr>`:'<tr><td colspan="5" style="text-align:center;color:#8b97ad;padding:24px">لا توجد أصناف أخرى حالياً</td></tr>';}
+function exportOther(fmt){const sel=document.getElementById('oProj');const pf=sel.value;let rows=OTHERITEMS.slice();if(pf)rows=rows.filter(x=>x.p===pf);if(!rows.length)return;const tot=rows.reduce((s,x)=>s+(+x.v||0),0);
+  if(fmt=='csv'){const q=s=>{s=String(s==null?'':s);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};const L=['Project,Item Description,Qty,Unit Price,Value (SAR)'];rows.forEach(x=>L.push([q(x.p),q(x.d),Math.round(x.q),Math.round(x.u),Math.round(x.v)].join(',')));L.push(',,,TOTAL,'+Math.round(tot));const b=new Blob(['﻿'+L.join('\r\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='Others.csv';a.click();}
+  else{var w=window.open('','_blank');var rh='';rows.forEach(function(x){rh+='<tr><td>'+esc(x.p)+'</td><td>'+esc(x.d)+'</td><td class=r>'+n(x.q)+'</td><td class=r>'+n(x.u)+'</td><td class=r>'+n(x.v)+'</td></tr>';});var css='body{font-family:Segoe UI,Tahoma,Arial;padding:24px;color:#1a2238}h2{color:#16294a;margin:0 0 4px}.s{color:#b8901e;font-weight:700;margin-bottom:14px}table{width:100%;border-collapse:collapse;font-size:12.5px}th{background:#16294a;color:#fff;padding:8px;text-align:right}td{padding:6px 8px;border-bottom:1px solid #e3e3e3}.r{text-align:right}tbody tr:last-child td{font-weight:700;background:#f6f1dd}';var doc='<!doctype html><html dir=rtl><head><meta charset=utf-8><title>أصناف أخرى</title><style>'+css+'</style></head><body><h2>SATC - أصناف أخرى</h2><div class=s>'+rows.length+' items - SAR '+n(tot)+'</div><table><thead><tr><th>المشروع</th><th>الصنف</th><th>الكمية</th><th>سعر الوحدة</th><th>القيمة</th></tr></thead><tbody>'+rh+'<tr><td colspan=4>الإجمالي / Total</td><td class=r>'+n(tot)+'</td></tr></tbody></table></body></html>';w.document.write(doc);w.document.close();setTimeout(function(){try{w.focus();w.print();}catch(e){}},350);}}
+
+const VIEWS=[{id:'overview',label:'Overview',title:'Dashboard Overview'},{id:'projects',label:'Projects',title:'Projects'},{id:'categories',label:'Categories',title:'Categories'},{id:'reports',label:'Reports',title:'Reports'},{id:'other',label:'Other',title:'Other Items'}];
 function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id=='view-'+id));
   document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('active',a.dataset.v==id));
   const v=VIEWS.find(x=>x.id==id);if(v)document.getElementById('pageTitle').textContent=v.title;}
