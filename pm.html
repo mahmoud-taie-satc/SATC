@@ -49,7 +49,8 @@ tr:hover td{background:#101935}
 #dashApp{display:none}
 #gate{position:fixed;inset:0;background:linear-gradient(rgba(10,14,26,.72),rgba(10,14,26,.9)),url(login-hero.jpg) center/cover no-repeat;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
 #gate.hidden{display:none}
-#gate .glogo{font-size:34px;font-weight:800;color:#c9a227;letter-spacing:3px}
+#gate .glogo{position:relative;display:inline-block;font-size:34px;font-weight:400;color:#c9a227;letter-spacing:32px}
+#gate .glogo::after{content:'';position:absolute;left:-10px;right:-10px;top:50%;height:2px;background:#c9a227}
 #gate .gsub{font-size:13px;color:#8ea0c4;margin-top:2px}
 #gate .gcard{width:280px;background:#121c3a;border:1px solid #1e2a4d;border-radius:12px;padding:24px;margin-top:26px}
 #gate .gcard p{font-size:13px;color:#8ea0c4;margin:0 0 10px;text-align:center}
@@ -65,15 +66,18 @@ tr:hover td{background:#101935}
 <body>
 <div id="gate">
   <div class="glogo">SATC</div>
-  <div class="gsub">ساتك</div>
+  <div class="gcredit"><span class="ln"></span><span class="tx">Developed by <b style="color:#fff;font-weight:700">Mahmoud Taie</b></span><span class="ln"></span></div>
+  <div class="grole">Procurement and Materials Engineer</div>
+  <div class="grole" style="margin-top:2px">Supervised by <b style="color:#fff;font-weight:700">Eng. Mohamed El-Sharaky</b></div>
+  <div class="grole">Procurement Manager</div>
+  <div class="grole" style="margin-top:2px">Supervised by <b style="color:#fff;font-weight:700">Ahmed Hisham</b></div>
+  <div class="grole">Supply Chain Management Director</div>
   <div class="gcard">
     <p>أدخل كلمة المرور للمتابعة</p>
     <input id="gpass" type="password" placeholder="كلمة المرور" autocomplete="off">
     <div class="gerr" id="gerr"></div>
     <button id="gbtn" type="button">دخول</button>
   </div>
-  <div class="gcredit"><span class="ln"></span><span class="tx">Developed by <b style="color:#fff;font-weight:700">Mahmoud Taie</b></span><span class="ln"></span></div>
-  <div class="grole">Procurement and Materials Engineer</div>
 </div>
 <audio id="loginSound" src="login-sound.mp3" preload="auto"></audio>
 <script>
