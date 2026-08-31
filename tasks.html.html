@@ -1,0 +1,163 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SATC — متابعة التاسكات</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Tahoma',Arial,sans-serif}
+body{background:#0a0e1a;color:#e6edf7;min-height:100vh}
+.top{display:flex;align-items:center;gap:16px;padding:16px 26px;background:linear-gradient(90deg,#0d1430,#111a3a);border-bottom:1px solid #1b2547;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{background:#c9a227;color:#16294a;font-weight:800;font-size:18px;letter-spacing:2px;padding:8px 14px;border-radius:8px}
+.brand h1{font-size:17px}.brand small{display:block;color:#9fb1d6;font-size:12px;font-weight:400;margin-top:2px}
+.top .sp{margin-inline-start:auto}
+.pill{display:flex;align-items:center;gap:7px;font-size:12px;color:#9fb1d6;background:#111a3a;border:1px solid #25325a;border-radius:20px;padding:7px 13px}
+.pill .d{width:7px;height:7px;border-radius:50%;background:#5f5e5a}
+.pill.live .d{background:#22c55e;box-shadow:0 0 6px #22c55e}
+.pill.err .d{background:#ef4444}
+.btn{background:#16203f;border:1px solid #25325a;color:#cdd8ee;border-radius:9px;padding:9px 15px;font-size:13.5px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.btn:hover{background:#1d2a52}
+.wrap{padding:18px 26px 60px;max-width:1180px;margin:0 auto}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.kpi{background:#111a3a;border:1px solid #1e2a4d;border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
+.kpi:before{content:"";position:absolute;top:0;inset-inline-start:16px;width:40px;height:3px;background:#c9a227;border-radius:3px}
+.kpi .l{color:#8ea0c4;font-size:12px}.kpi .v{font-size:24px;font-weight:800;margin-top:8px}
+.kpi.prog .v{color:#eab308}.kpi.late .v{color:#f87171}.kpi.done .v{color:#22c55e}
+.card{background:#0f1730;border:1px solid #1b2547;border-radius:14px;padding:18px}
+.tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+input,select{background:#0c1226;border:1px solid #1e2a44;color:#e6edf7;border-radius:9px;padding:9px 13px;font-size:13px}
+input{min-width:220px;flex:1}
+.muted{color:#8ea0c4;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#16203f;color:#cdd8ee;text-align:start;padding:9px 11px;font-size:12px;position:sticky;top:0}
+td{padding:10px 11px;border-bottom:1px solid #161f3b;color:#dfe7f4}
+tr:hover td{background:#101935}
+.scroll{max-height:64vh;overflow:auto;border:1px solid #1b2547;border-radius:10px}
+.badge{display:inline-block;padding:3px 12px;border-radius:20px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.wm{position:fixed;inset-inline-end:14px;bottom:11px;z-index:99;font:600 11px 'Segoe UI',Arial;color:#c9a227;background:rgba(10,14,26,.62);padding:5px 13px;border-radius:20px;border:1px solid rgba(201,162,39,.32)}
+.empty{text-align:center;color:#8ea0c4;padding:36px}
+@media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}}
+</style></head>
+<body>
+<div class="top">
+  <div class="brand"><span class="logo">SATC</span><div><h1>متابعة التاسكات</h1><small>مشتريات — تحديث لايف</small></div></div>
+  <span class="sp"></span>
+  <span class="pill" id="statusPill"><span class="d"></span><span id="statusTxt">جاري الاتصال…</span></span>
+  <a class="btn" href="https://docs.google.com/spreadsheets/d/1Jq17DqGsxrv2nv7KKugPir2Iv1Ft1Irnu-sNO2hIrTo/edit" target="_blank" rel="noopener">فتح الشيت</a>
+  <button class="btn" onclick="loadData(true)">↻ تحديث</button>
+</div>
+
+<div class="wrap">
+  <div class="kpis">
+    <div class="kpi"><div class="l">إجمالي التاسكات</div><div class="v" id="kTotal">—</div></div>
+    <div class="kpi prog"><div class="l">شغال</div><div class="v" id="kProg">—</div></div>
+    <div class="kpi late"><div class="l">متأخر ⛔</div><div class="v" id="kLate">—</div></div>
+    <div class="kpi done"><div class="l">خلص</div><div class="v" id="kDone">—</div></div>
+  </div>
+
+  <div class="card">
+    <div class="tools">
+      <input id="q" oninput="render()" placeholder="بحث بوصف التاسك / المسؤول…">
+      <select id="fStatus" onchange="render()">
+        <option value="">كل الحالات</option>
+        <option value="لم يبدأ">لم يبدأ</option>
+        <option value="شغال">شغال</option>
+        <option value="متأخر">متأخر</option>
+        <option value="خلص">خلص</option>
+      </select>
+      <span class="muted" id="cnt"></span>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr>
+          <th>وصف التاسك</th><th>المصدر</th><th>المسؤول</th><th>الاستحقاق</th><th>آخر تحديث</th><th>الحالة</th>
+        </tr></thead>
+        <tbody id="rows"><tr><td colspan="6" class="empty">… جاري التحميل</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="wm">SATC <span>· متابعة داخلية</span></div>
+
+<script>
+// جدول جوجل شيت اللي بيتغذى منه الداشبورد لايف (نفس أسلوب SATC Dashboard الأصلي)
+const SHEET_ID = "1Jq17DqGsxrv2nv7KKugPir2Iv1Ft1Irnu-sNO2hIrTo";
+const GID = "1607139346";
+const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`;
+
+let TASKS = [];
+
+function parseCSV(t){const R=[];let f='',r=[],q=false;for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++;}else q=false;}else f+=c;}else{if(c=='"')q=true;else if(c==','){r.push(f);f='';}else if(c=='\n'){r.push(f);R.push(r);r=[];f='';}else if(c!='\r')f+=c;}}if(f.length||r.length){r.push(f);R.push(r);}return R;}
+function findCol(h,name){return h.findIndex(x=>(x||'').trim()===name);}
+
+function statusColor(s){
+  if(s==='متأخر') return {bg:'#ef444422',fg:'#f87171',bd:'#ef444455'};
+  if(s==='شغال') return {bg:'#eab30822',fg:'#eab308',bd:'#eab30855'};
+  if(s==='خلص') return {bg:'#22c55e22',fg:'#22c55e',bd:'#22c55e55'};
+  return {bg:'#8ea0c422',fg:'#8ea0c4',bd:'#8ea0c455'};
+}
+
+function render(){
+  const q = (document.getElementById('q').value||'').trim().toLowerCase();
+  const fs = document.getElementById('fStatus').value;
+  const filtered = TASKS.filter(t=>{
+    const hit = !q || (t.description||'').toLowerCase().includes(q) || (t.owner||'').toLowerCase().includes(q);
+    const st = !fs || t.status === fs;
+    return hit && st;
+  });
+  document.getElementById('cnt').textContent = filtered.length + ' نتيجة';
+  const body = document.getElementById('rows');
+  if(!filtered.length){ body.innerHTML = '<tr><td colspan="6" class="empty">مفيش نتائج</td></tr>'; return; }
+  body.innerHTML = filtered.map(t=>{
+    const c = statusColor(t.status);
+    return `<tr>
+      <td>${t.description||''}</td>
+      <td>${t.source||''}</td>
+      <td>${t.owner||'—'}</td>
+      <td>${t.due||'—'}</td>
+      <td>${t.lastUpdate||'—'}</td>
+      <td><span class="badge" style="background:${c.bg};color:${c.fg};border:1px solid ${c.bd}">${t.status||'—'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function setKpis(){
+  document.getElementById('kTotal').textContent = TASKS.length;
+  document.getElementById('kProg').textContent = TASKS.filter(t=>t.status==='شغال').length;
+  document.getElementById('kLate').textContent = TASKS.filter(t=>t.status==='متأخر').length;
+  document.getElementById('kDone').textContent = TASKS.filter(t=>t.status==='خلص').length;
+}
+
+function setStatus(ok, msg){
+  const pill = document.getElementById('statusPill');
+  pill.className = 'pill ' + (ok ? 'live' : 'err');
+  document.getElementById('statusTxt').textContent = msg;
+}
+
+async function loadData(){
+  setStatus(true, 'جاري التحديث…');
+  try{
+    const r = await fetch(`${CSV_URL}&_=${Date.now()}`, {cache:'no-store'});
+    const rows = parseCSV(await r.text()).filter(x=>x.length>1 && x.some(v=>v));
+    if(!rows.length) throw new Error('empty');
+    const h = rows[0];
+    const iDesc = findCol(h,'وصف التاسك'), iSrc = findCol(h,'المصدر'), iOwner = findCol(h,'المسؤول'),
+          iDue = findCol(h,'تاريخ الاستحقاق'), iUpd = findCol(h,'آخر تحديث'), iStatus = findCol(h,'الحالة');
+    TASKS = rows.slice(1).filter(row=>(row[iDesc]||'').trim()).map(row=>({
+      description: row[iDesc] || '',
+      source: row[iSrc] || '',
+      owner: row[iOwner] || '',
+      due: row[iDue] || '',
+      lastUpdate: row[iUpd] || '',
+      status: row[iStatus] || ''
+    }));
+    setKpis();
+    render();
+    setStatus(true, 'محدّث الآن');
+  }catch(e){
+    setStatus(false, 'تعذّر الاتصال بالبيانات');
+  }
+}
+
+loadData();
+setInterval(loadData, 60000);
+</script>
+</body></html>
